@@ -217,12 +217,16 @@ pub const NEIGHBORS: &[(Territory, Territory)] = &[
 
 pub fn neighbors(territory: Territory) -> Vec<Territory> {
     let mut result = vec![];
-    for (start, end) in NEIGHBORS {
-        if *start == territory {
-            result.push(*end);
-        } else if *end == territory {
-            result.push(*start);
+    for &(start, end) in NEIGHBORS {
+        if start == territory {
+            result.push(end);
+        } else if end == territory {
+            result.push(start);
         }
     }
     result
+}
+
+pub fn compare_connection(start: Territory, end: Territory) -> bool {
+    NEIGHBORS.iter().any(|&(neighbor_start, neighbor_end)| (neighbor_start == start && neighbor_end == end) || (neighbor_start == end && neighbor_end == start))
 }
