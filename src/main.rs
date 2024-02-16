@@ -56,92 +56,49 @@ const TERRITORIES: &[&'static str] = &[
     "Japan",
 ];
 
-#[allow(dead_code)]
 const ALASKA: u8 = 00;
-#[allow(dead_code)]
 const NORTHWEST_TERRITORY: u8 = 01;
-#[allow(dead_code)]
 const GREENLAND: u8 = 02;
-#[allow(dead_code)]
 const ALBERTA: u8 = 03;
-#[allow(dead_code)]
 const ONTARIO: u8 = 04;
-#[allow(dead_code)]
 const QUEBEC: u8 = 05;
-#[allow(dead_code)]
 const WESTERN_UNITED_STATES: u8 = 06;
-#[allow(dead_code)]
 const EASTERN_UNITED_STATES: u8 = 07;
-#[allow(dead_code)]
 const CENTRAL_AMERICA: u8 = 08;
-#[allow(dead_code)]
 const VENEZUELA: u8 = 09;
-#[allow(dead_code)]
 const PERU: u8 = 10;
-#[allow(dead_code)]
 const BRAZIL: u8 = 11;
-#[allow(dead_code)]
 const ARGENTINA: u8 = 12;
-#[allow(dead_code)]
 const ICELAND: u8 = 13;
-#[allow(dead_code)]
 const SCANDINAVIA: u8 = 14;
-#[allow(dead_code)]
 const UKRAINE: u8 = 15;
-#[allow(dead_code)]
 const GREAT_BRITAIN: u8 = 16;
-#[allow(dead_code)]
 const NORTHERN_EUROPE: u8 = 17;
-#[allow(dead_code)]
 const WESTERN_EUROPE: u8 = 18;
-#[allow(dead_code)]
 const SOUTHERN_EUROPE: u8 = 19;
-#[allow(dead_code)]
 const NORTH_AFRICA: u8 = 20;
-#[allow(dead_code)]
 const EGYPT: u8 = 21;
-#[allow(dead_code)]
 const EAST_AFRICA: u8 = 22;
-#[allow(dead_code)]
 const CONGO: u8 = 23;
-#[allow(dead_code)]
 const SOUTH_AFRICA: u8 = 24;
-#[allow(dead_code)]
 const MADAGASCAR: u8 = 25;
-#[allow(dead_code)]
 const URAL: u8 = 26;
-#[allow(dead_code)]
 const SIBERIA: u8 = 27;
-#[allow(dead_code)]
 const YAKUTSK: u8 = 28;
-#[allow(dead_code)]
 const KAMCHATKA: u8 = 29;
-#[allow(dead_code)]
 const IRKUTSK: u8 = 30;
-#[allow(dead_code)]
 const MONGOLIA: u8 = 31;
-#[allow(dead_code)]
 const CHINA: u8 = 32;
-#[allow(dead_code)]
 const AFGHANISTAN: u8 = 33;
-#[allow(dead_code)]
 const MIDDLE_EAST: u8 = 34;
-#[allow(dead_code)]
 const INDIA: u8 = 35;
-#[allow(dead_code)]
 const SIAM: u8 = 36;
-#[allow(dead_code)]
 const INDONESIA: u8 = 37;
-#[allow(dead_code)]
 const NEW_GUINEA: u8 = 38;
-#[allow(dead_code)]
 const WESTERN_AUSTRALIA: u8 = 39;
-#[allow(dead_code)]
 const EASTERN_AUSTRALIA: u8 = 40;
-#[allow(dead_code)]
 const JAPAN: u8 = 41;
 
-#[allow(dead_code)]
 const NEIGHBORS: &[(u8, u8)] = &[
     (ALASKA, NORTHWEST_TERRITORY),
     (ALASKA, ALBERTA),
@@ -538,7 +495,7 @@ fn check_neighbors() {
     for (idx, (s, e)) in NEIGHBORS[..NEIGHBORS.len() - 1].iter().enumerate() {
         for (idx2, (s2, e2)) in NEIGHBORS[(idx + 1)..].iter().enumerate() {
             let is_equal = (*s2 == *s && *e2 == *e) || (*s2 == *e && *e2 == *s);
-            assert!(is_equal, "Connection between {} and {} exists at least twice (2: {},{}, idx {} and {})", s, e, s2, e2, idx, idx + idx2 + 1);
+            assert!(!is_equal, "Connection between s={} and e={} (s2={}, e2={}) exists at least twice (idx {} and {})", s, e, s2, e2, idx, idx + idx2 + 1);
         }
     }
 }
