@@ -23,5 +23,12 @@ pub struct GameState {
   territories: [TerritoryState; TERRITORIES.len()]
 }
 
-pub mod game_state;
+pub enum Move {
+  Pass,
+  Move(u8, u8),
+  Attack(u8, u8)
+}
+
+pub mod initial_placement;
 pub mod draw_map;
+pub mod display;
