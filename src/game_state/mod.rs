@@ -18,25 +18,26 @@ struct TerritoryState {
     troops: u8,
 }
 
-#[derive(Copy, Clone)]
-enum Phase {
-    Reinforcement,
-    Fortify1,
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum GamePhase {
+    Reinforce,
     Attack,
-    Fortify2,
+    Fortify,
 }
 
 #[derive(Copy, Clone)]
 pub struct GameState {
     current_player: Player,
     territories: [TerritoryState; TERRITORIES.len()],
-    phase: Phase,
+    phase: GamePhase,
 }
 
+#[derive(PartialEq)]
 pub enum Move {
     Pass,
-    Move(u8, u8),
-    Attack(u8, u8)
+    Reinforce(u8, u8),
+    Move(u8, u8, u8),
+    Attack(u8, u8, u8, u8)
 }
 
 pub mod initial_placement;

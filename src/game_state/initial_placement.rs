@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 use crate::player::Player;
 use crate::territories::TERRITORIES;
 
-use super::{GameStateDuringInitialPlacement, TerritoryStateDuringInitialPlacement, GameState, TerritoryState, Phase};
+use super::{GameStateDuringInitialPlacement, TerritoryStateDuringInitialPlacement, GameState, TerritoryState, GamePhase};
 
 impl GameStateDuringInitialPlacement {
     const STARTING_PLAYER: Player = Player::A;
@@ -20,7 +20,7 @@ impl GameStateDuringInitialPlacement {
         GameState {
             current_player: Self::STARTING_PLAYER,
             territories: self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), troops: t.troops}).collect::<Vec<_>>().try_into().unwrap(),
-            phase: Phase::Reinforcement
+            phase: GamePhase::Reinforce
         }
     }
 

@@ -1,19 +1,44 @@
 use strum::IntoEnumIterator;
 
-use super::{GameState, Move};
+use super::{GameState, Move, GamePhase};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
     pub fn legal_moves(&self) -> Vec<Move> {
-        return Vec::new();
+        let mut moves = Vec::new();
+
+        let territories = self.territories_of_player(self.current_player);
+        let number_of_reinforcements = match territories.len() {
+            // switch when ready https://github.com/rust-lang/rust/issues/37854
+            0 | 1 | 2 | 3 |4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
+            14 | 15 | 16 => 4,
+            _ => 5
+        };
+
+        if self.phase == GamePhase::Reinforce {
+            for i in 1..number_of_reinforcements {
+                for t in territories.iter() {
+                    moves.push(Move::Reinforce(*t as u8, i));
+                }
+            }
+        }
+
+        if self.phase == GamePhase::Attack || self.phase == GamePhase::Fortify {
+            moves.push(Move::Pass);
+        }
+
+        moves
     }
 
-    pub fn apply_move(&self, _move: &Move) -> GameState {
-        return self.clone();
+    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, &'static str> {
+        if !self.legal_moves().contains(move_to_play) {
+            return Err("Illegal move");
+        }
+        return Ok(self.clone());
     }
 
-    pub fn territories_per_player(&self, player: Player) -> usize {
-        self.territories.iter().filter(|t| t.player == player).count()
+    fn territories_of_player(&self, player: Player) -> Vec<usize> {
+        self.territories.iter().enumerate().filter_map(|(i, t)| if t.player == player { Some(i) } else { None }).collect()
     }
 
     pub fn continents(&self, player: Player) -> Vec<Continent> {

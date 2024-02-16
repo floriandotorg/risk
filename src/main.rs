@@ -8,6 +8,6 @@ use game_state::GameStateDuringInitialPlacement;
 
 fn main() {
     let state = GameStateDuringInitialPlacement::new().place_random().start();
-    println!("{}", state);
-    state.draw_map().expect("Failed to draw map");
+    println!("{:?}", state.legal_moves());
+    state.save_map().expect("Failed to draw map");
 }

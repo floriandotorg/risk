@@ -56,7 +56,7 @@ const TERRITORY_MAP_COORDS: &[(f64, f64); TERRITORIES.len()] = &[
 ];
 
 impl GameState {
-    pub fn draw_map_with_filename(&self, filename: &str) -> Result<(), cairo::Error> {
+    pub fn draw_map_with_filename(&self, filename: &str, shoud_print: bool) -> Result<(), cairo::Error> {
         let width: u32 = 800;
         let height: u32 = 533;
 
@@ -100,15 +100,21 @@ impl GameState {
 
         img.save(filename).unwrap();
 
-        print(&img, &Config {
-            width: Some(80),
-            ..Default::default()
-        }).unwrap();
+        if shoud_print {
+            print(&img, &Config {
+                width: Some(80),
+                ..Default::default()
+            }).unwrap();
+        }
 
         Ok(())
     }
 
     pub fn draw_map(&self) -> Result<(), cairo::Error> {
-        self.draw_map_with_filename("output-map.png")
+        self.draw_map_with_filename("output-map.png", true)
+    }
+
+    pub fn save_map(&self) -> Result<(), cairo::Error> {
+        self.draw_map_with_filename("output-map.png", false)
     }
 }
