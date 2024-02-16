@@ -1,3 +1,6 @@
+use num_enum::TryFromPrimitive;
+use strum_macros::EnumIter;
+
 pub const TERRITORIES: &[&'static str] = &[
     "Alaska",
     "Northwest Territory",
@@ -44,7 +47,7 @@ pub const TERRITORIES: &[&'static str] = &[
 ];
 
 #[repr(u8)]
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, TryFromPrimitive)]
 pub enum Territory {
     Alaska = 00,
     NorthwestTerritory = 01,
@@ -88,6 +91,16 @@ pub enum Territory {
     WesternAustralia = 39,
     EasternAustralia = 40,
     Japan = 41,
+}
+
+#[derive(EnumIter, PartialEq, Eq, Clone, Copy)]
+pub enum Continent {
+    NorthAmerica,
+    SouthAmerica,
+    Europe,
+    Asia,
+    Africa,
+    Oceania
 }
 
 pub const NEIGHBORS: &[(Territory, Territory)] = &[
@@ -215,16 +228,65 @@ pub const NEIGHBORS: &[(Territory, Territory)] = &[
     (Territory::WesternAustralia, Territory::EasternAustralia),
 ];
 
-pub fn neighbors(territory: Territory) -> Vec<Territory> {
-    let mut result = vec![];
-    for &(start, end) in NEIGHBORS {
-        if start == territory {
-            result.push(end);
-        } else if end == territory {
-            result.push(start);
+impl Territory {
+    pub fn continent(self) -> Continent {
+        match self {
+            Territory::Alaska => Continent::NorthAmerica,
+            Territory::NorthwestTerritory => Continent::NorthAmerica,
+            Territory::Greenland => Continent::NorthAmerica,
+            Territory::Alberta => Continent::NorthAmerica,
+            Territory::Ontario => Continent::NorthAmerica,
+            Territory::Quebec => Continent::NorthAmerica,
+            Territory::WesternUnitedStates => Continent::NorthAmerica,
+            Territory::EasternUnitedStates => Continent::NorthAmerica,
+            Territory::CentralAmerica => Continent::NorthAmerica,
+            Territory::Venezuela => Continent::SouthAmerica,
+            Territory::Peru => Continent::SouthAmerica,
+            Territory::Brazil => Continent::SouthAmerica,
+            Territory::Argentina => Continent::SouthAmerica,
+            Territory::Iceland => Continent::Europe,
+            Territory::Scandinavia => Continent::Europe,
+            Territory::Ukraine => Continent::Europe,
+            Territory::GreatBritain => Continent::Europe,
+            Territory::NorthernEurope => Continent::Europe,
+            Territory::WesternEurope => Continent::Europe,
+            Territory::SouthernEurope => Continent::Europe,
+            Territory::NorthAfrica => Continent::Africa,
+            Territory::Egypt => Continent::Africa,
+            Territory::EastAfrica => Continent::Africa,
+            Territory::Congo => Continent::Africa,
+            Territory::SouthAfrica => Continent::Africa,
+            Territory::Madagascar => Continent::Africa,
+            Territory::Ural => Continent::Asia,
+            Territory::Siberia => Continent::Asia,
+            Territory::Yakutsk => Continent::Asia,
+            Territory::Kamchatka => Continent::Asia,
+            Territory::Irkutsk => Continent::Asia,
+            Territory::Mongolia => Continent::Asia,
+            Territory::China => Continent::Asia,
+            Territory::Afghanistan => Continent::Asia,
+            Territory::MiddleEast => Continent::Asia,
+            Territory::India => Continent::Asia,
+            Territory::Siam => Continent::Asia,
+            Territory::Indonesia => Continent::Oceania,
+            Territory::NewGuinea => Continent::Oceania,
+            Territory::WesternAustralia => Continent::Oceania,
+            Territory::EasternAustralia => Continent::Oceania,
+            Territory::Japan => Continent::Asia,
         }
     }
-    result
+
+    pub fn neighbors(self) -> Vec<Territory> {
+        let mut result = vec![];
+        for &(start, end) in NEIGHBORS {
+            if start == self {
+                result.push(end);
+            } else if end == self {
+                result.push(start);
+            }
+        }
+        result
+    }
 }
 
 pub fn compare_connection(start: Territory, end: Territory) -> bool {
