@@ -4,9 +4,11 @@ use viuer::{Config, print, };
 use cairo;
 use image::{DynamicImage, ImageBuffer};
 
+use crate::territories::TERRITORIES;
+
 use super::GameState;
 
-const TERRITORY_MAP_COORDS: &[(f64, f64)] = &[
+const TERRITORY_MAP_COORDS: &[(f64, f64); TERRITORIES.len()] = &[
     (45.0, 80.0), // Alaska
     (120.0, 74.0), // Northwest Territory
     (270.0, 55.0), // Greenland

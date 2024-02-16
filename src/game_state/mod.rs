@@ -12,23 +12,34 @@ pub struct GameStateDuringInitialPlacement {
     territories: [TerritoryStateDuringInitialPlacement; TERRITORIES.len()]
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct TerritoryState {
     player: Player,
     troops: u8,
 }
 
+#[derive(Copy, Clone)]
+enum Phase {
+    Reinforcement,
+    Fortify1,
+    Attack,
+    Fortify2,
+}
+
+#[derive(Copy, Clone)]
 pub struct GameState {
-  current_player: Player,
-  territories: [TerritoryState; TERRITORIES.len()]
+    current_player: Player,
+    territories: [TerritoryState; TERRITORIES.len()],
+    phase: Phase,
 }
 
 pub enum Move {
-  Pass,
-  Move(u8, u8),
-  Attack(u8, u8)
+    Pass,
+    Move(u8, u8),
+    Attack(u8, u8)
 }
 
 pub mod initial_placement;
+pub mod moves;
 pub mod draw_map;
 pub mod display;
