@@ -43,170 +43,186 @@ pub const TERRITORIES: &[&'static str] = &[
     "Japan",
 ];
 
-pub const ALASKA: u8 = 00;
-pub const NORTHWEST_TERRITORY: u8 = 01;
-pub const GREENLAND: u8 = 02;
-pub const ALBERTA: u8 = 03;
-pub const ONTARIO: u8 = 04;
-pub const QUEBEC: u8 = 05;
-pub const WESTERN_UNITED_STATES: u8 = 06;
-pub const EASTERN_UNITED_STATES: u8 = 07;
-pub const CENTRAL_AMERICA: u8 = 08;
-pub const VENEZUELA: u8 = 09;
-pub const PERU: u8 = 10;
-pub const BRAZIL: u8 = 11;
-pub const ARGENTINA: u8 = 12;
-pub const ICELAND: u8 = 13;
-pub const SCANDINAVIA: u8 = 14;
-pub const UKRAINE: u8 = 15;
-pub const GREAT_BRITAIN: u8 = 16;
-pub const NORTHERN_EUROPE: u8 = 17;
-pub const WESTERN_EUROPE: u8 = 18;
-pub const SOUTHERN_EUROPE: u8 = 19;
-pub const NORTH_AFRICA: u8 = 20;
-pub const EGYPT: u8 = 21;
-pub const EAST_AFRICA: u8 = 22;
-pub const CONGO: u8 = 23;
-pub const SOUTH_AFRICA: u8 = 24;
-pub const MADAGASCAR: u8 = 25;
-pub const URAL: u8 = 26;
-pub const SIBERIA: u8 = 27;
-pub const YAKUTSK: u8 = 28;
-pub const KAMCHATKA: u8 = 29;
-pub const IRKUTSK: u8 = 30;
-pub const MONGOLIA: u8 = 31;
-pub const CHINA: u8 = 32;
-pub const AFGHANISTAN: u8 = 33;
-pub const MIDDLE_EAST: u8 = 34;
-pub const INDIA: u8 = 35;
-pub const SIAM: u8 = 36;
-pub const INDONESIA: u8 = 37;
-pub const NEW_GUINEA: u8 = 38;
-pub const WESTERN_AUSTRALIA: u8 = 39;
-pub const EASTERN_AUSTRALIA: u8 = 40;
-pub const JAPAN: u8 = 41;
+#[repr(u8)]
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum Territory {
+    Alaska = 00,
+    NorthwestTerritory = 01,
+    Greenland = 02,
+    Alberta = 03,
+    Ontario = 04,
+    Quebec = 05,
+    WesternUnitedStates = 06,
+    EasternUnitedStates = 07,
+    CentralAmerica = 08,
+    Venezuela = 09,
+    Peru = 10,
+    Brazil = 11,
+    Argentina = 12,
+    Iceland = 13,
+    Scandinavia = 14,
+    Ukraine = 15,
+    GreatBritain = 16,
+    NorthernEurope = 17,
+    WesternEurope = 18,
+    SouthernEurope = 19,
+    NorthAfrica = 20,
+    Egypt = 21,
+    EastAfrica = 22,
+    Congo = 23,
+    SouthAfrica = 24,
+    Madagascar = 25,
+    Ural = 26,
+    Siberia = 27,
+    Yakutsk = 28,
+    Kamchatka = 29,
+    Irkutsk = 30,
+    Mongolia = 31,
+    China = 32,
+    Afghanistan = 33,
+    MiddleEast = 34,
+    India = 35,
+    Siam = 36,
+    Indonesia = 37,
+    NewGuinea = 38,
+    WesternAustralia = 39,
+    EasternAustralia = 40,
+    Japan = 41,
+}
 
-pub const NEIGHBORS: &[(u8, u8)] = &[
-    (ALASKA, NORTHWEST_TERRITORY),
-    (ALASKA, ALBERTA),
-    (ALASKA, KAMCHATKA),
+pub const NEIGHBORS: &[(Territory, Territory)] = &[
+    (Territory::Alaska, Territory::NorthwestTerritory),
+    (Territory::Alaska, Territory::Alberta),
+    (Territory::Alaska, Territory::Kamchatka),
 
-    (NORTHWEST_TERRITORY, GREENLAND),
-    (NORTHWEST_TERRITORY, ALBERTA),
-    (NORTHWEST_TERRITORY, ONTARIO),
+    (Territory::NorthwestTerritory, Territory::Greenland),
+    (Territory::NorthwestTerritory, Territory::Alberta),
+    (Territory::NorthwestTerritory, Territory::Ontario),
 
-    (GREENLAND, ONTARIO),
-    (GREENLAND, QUEBEC),
-    (GREENLAND, ICELAND),
+    (Territory::Greenland, Territory::Ontario),
+    (Territory::Greenland, Territory::Quebec),
+    (Territory::Greenland, Territory::Iceland),
 
-    (ALBERTA, ONTARIO),
-    (ALBERTA, WESTERN_UNITED_STATES),
+    (Territory::Alberta, Territory::Ontario),
+    (Territory::Alberta, Territory::WesternUnitedStates),
 
-    (ONTARIO, QUEBEC),
-    (ONTARIO, WESTERN_UNITED_STATES),
-    (ONTARIO, EASTERN_UNITED_STATES),
+    (Territory::Ontario, Territory::Quebec),
+    (Territory::Ontario, Territory::WesternUnitedStates),
+    (Territory::Ontario, Territory::EasternUnitedStates),
 
-    (QUEBEC, EASTERN_UNITED_STATES),
+    (Territory::Quebec, Territory::EasternUnitedStates),
 
-    (WESTERN_UNITED_STATES, EASTERN_UNITED_STATES),
-    (WESTERN_UNITED_STATES, CENTRAL_AMERICA),
+    (Territory::WesternUnitedStates, Territory::EasternUnitedStates),
+    (Territory::WesternUnitedStates, Territory::CentralAmerica),
 
-    (EASTERN_UNITED_STATES, CENTRAL_AMERICA),
+    (Territory::EasternUnitedStates, Territory::CentralAmerica),
 
-    (CENTRAL_AMERICA, VENEZUELA),
+    (Territory::CentralAmerica, Territory::Venezuela),
 
-    (VENEZUELA, PERU),
-    (VENEZUELA, BRAZIL),
+    (Territory::Venezuela, Territory::Peru),
+    (Territory::Venezuela, Territory::Brazil),
 
-    (PERU, BRAZIL),
-    (PERU, ARGENTINA),
+    (Territory::Peru, Territory::Brazil),
+    (Territory::Peru, Territory::Argentina),
 
-    (BRAZIL, ARGENTINA),
-    (BRAZIL, NORTH_AFRICA),
+    (Territory::Brazil, Territory::Argentina),
+    (Territory::Brazil, Territory::NorthAfrica),
 
-    //(ARGENTINA, NORTH_AFRICA),
+    //(Territory::Argentina, Territory::NorthAfrica),
 
-    (ICELAND, GREAT_BRITAIN),
-    (ICELAND, SCANDINAVIA),
+    (Territory::Iceland, Territory::GreatBritain),
+    (Territory::Iceland, Territory::Scandinavia),
 
-    (SCANDINAVIA, NORTHERN_EUROPE),
-    (SCANDINAVIA, UKRAINE),
-    (SCANDINAVIA, GREAT_BRITAIN),
+    (Territory::Scandinavia, Territory::NorthernEurope),
+    (Territory::Scandinavia, Territory::Ukraine),
+    (Territory::Scandinavia, Territory::GreatBritain),
 
-    (UKRAINE, NORTHERN_EUROPE),
-    (UKRAINE, SOUTHERN_EUROPE),
-    (UKRAINE, MIDDLE_EAST),
-    (UKRAINE, AFGHANISTAN),
-    (UKRAINE, URAL),
+    (Territory::Ukraine, Territory::NorthernEurope),
+    (Territory::Ukraine, Territory::SouthernEurope),
+    (Territory::Ukraine, Territory::MiddleEast),
+    (Territory::Ukraine, Territory::Afghanistan),
+    (Territory::Ukraine, Territory::Ural),
 
-    (GREAT_BRITAIN, NORTHERN_EUROPE),
-    (GREAT_BRITAIN, WESTERN_EUROPE),
+    (Territory::GreatBritain, Territory::NorthernEurope),
+    (Territory::GreatBritain, Territory::WesternEurope),
 
-    (NORTHERN_EUROPE, SOUTHERN_EUROPE),
-    (NORTHERN_EUROPE, WESTERN_EUROPE),
+    (Territory::NorthernEurope, Territory::SouthernEurope),
+    (Territory::NorthernEurope, Territory::WesternEurope),
 
-    (WESTERN_EUROPE, SOUTHERN_EUROPE),
-    (WESTERN_EUROPE, NORTH_AFRICA),
+    (Territory::WesternEurope, Territory::SouthernEurope),
+    (Territory::WesternEurope, Territory::NorthAfrica),
 
-    (SOUTHERN_EUROPE, MIDDLE_EAST),
-    (SOUTHERN_EUROPE, EGYPT),
-    (SOUTHERN_EUROPE, NORTH_AFRICA),
+    (Territory::SouthernEurope, Territory::MiddleEast),
+    (Territory::SouthernEurope, Territory::Egypt),
+    (Territory::SouthernEurope, Territory::NorthAfrica),
 
-    (NORTH_AFRICA, EGYPT),
-    (NORTH_AFRICA, EAST_AFRICA),
-    (NORTH_AFRICA, CONGO),
+    (Territory::NorthAfrica, Territory::Egypt),
+    (Territory::NorthAfrica, Territory::EastAfrica),
+    (Territory::NorthAfrica, Territory::Congo),
 
-    (EGYPT, MIDDLE_EAST),
-    (EGYPT, EAST_AFRICA),
+    (Territory::Egypt, Territory::MiddleEast),
+    (Territory::Egypt, Territory::EastAfrica),
 
-    (EAST_AFRICA, CONGO),
-    (EAST_AFRICA, SOUTH_AFRICA),
-    (EAST_AFRICA, MADAGASCAR),
-    //(EAST_AFRICA, MIDDLE_EAST), // "the missing link in the 40th Anniversary Collector's Edition"
+    (Territory::EastAfrica, Territory::Congo),
+    (Territory::EastAfrica, Territory::SouthAfrica),
+    (Territory::EastAfrica, Territory::Madagascar),
+    (Territory::EastAfrica, Territory::MiddleEast), // "the missing link in the 40th Anniversary Collector's Edition"
 
-    (CONGO, SOUTH_AFRICA),
+    (Territory::Congo, Territory::SouthAfrica),
 
-    (SOUTH_AFRICA, MADAGASCAR),
+    (Territory::SouthAfrica, Territory::Madagascar),
 
-    (URAL, SIBERIA),
-    (URAL, CHINA),
-    (URAL, AFGHANISTAN),
+    (Territory::Ural, Territory::Siberia),
+    (Territory::Ural, Territory::China),
+    (Territory::Ural, Territory::Afghanistan),
 
-    (SIBERIA, YAKUTSK),
-    (SIBERIA, IRKUTSK),
-    (SIBERIA, MONGOLIA),
-    (SIBERIA, CHINA),
+    (Territory::Siberia, Territory::Yakutsk),
+    (Territory::Siberia, Territory::Irkutsk),
+    (Territory::Siberia, Territory::Mongolia),
+    (Territory::Siberia, Territory::China),
 
-    (YAKUTSK, KAMCHATKA),
-    (YAKUTSK, IRKUTSK),
+    (Territory::Yakutsk, Territory::Kamchatka),
+    (Territory::Yakutsk, Territory::Irkutsk),
 
-    (KAMCHATKA, IRKUTSK),
-    (KAMCHATKA, MONGOLIA),
-    (KAMCHATKA, JAPAN),
+    (Territory::Kamchatka, Territory::Irkutsk),
+    (Territory::Kamchatka, Territory::Mongolia),
+    (Territory::Kamchatka, Territory::Japan),
 
-    (IRKUTSK, MONGOLIA),
+    (Territory::Irkutsk, Territory::Mongolia),
 
-    (MONGOLIA, CHINA),
-    (MONGOLIA, JAPAN),
+    (Territory::Mongolia, Territory::China),
+    (Territory::Mongolia, Territory::Japan),
 
-    (CHINA, AFGHANISTAN),
-    (CHINA, INDIA),
-    (CHINA, SIAM),
+    (Territory::China, Territory::Afghanistan),
+    (Territory::China, Territory::India),
+    (Territory::China, Territory::Siam),
 
-    (AFGHANISTAN, MIDDLE_EAST),
-    (AFGHANISTAN, INDIA),
+    (Territory::Afghanistan, Territory::MiddleEast),
+    (Territory::Afghanistan, Territory::India),
 
-    (MIDDLE_EAST, INDIA),
+    (Territory::MiddleEast, Territory::India),
 
-    (INDIA, SIAM),
+    (Territory::India, Territory::Siam),
 
-    (SIAM, INDONESIA),
+    (Territory::Siam, Territory::Indonesia),
 
-    (INDONESIA, NEW_GUINEA),
-    (INDONESIA, WESTERN_AUSTRALIA),
+    (Territory::Indonesia, Territory::NewGuinea),
+    (Territory::Indonesia, Territory::WesternAustralia),
 
-    (NEW_GUINEA, WESTERN_AUSTRALIA),
-    (NEW_GUINEA, EASTERN_AUSTRALIA),
+    (Territory::NewGuinea, Territory::WesternAustralia),
+    (Territory::NewGuinea, Territory::EasternAustralia),
 
-    (WESTERN_AUSTRALIA, EASTERN_AUSTRALIA),
+    (Territory::WesternAustralia, Territory::EasternAustralia),
 ];
+
+pub fn neighbors(territory: Territory) -> Vec<Territory> {
+    let mut result = vec![];
+    for (start, end) in NEIGHBORS {
+        if *start == territory {
+            result.push(*end);
+        } else if *end == territory {
+            result.push(*start);
+        }
+    }
+    result
+}
