@@ -67,8 +67,7 @@ impl GameState {
             Move::Pass => {
                 let (next_phase, next_player) = match self.phase {
                     GamePhase::Reinforce(armies) => return Err(MoveApplyErr::MoveNotInPhase(Move::Pass, GamePhase::Reinforce(armies))),
-                    GamePhase::Attack => (GamePhase::Fortify, self.current_player),
-                    GamePhase::Fortify => {
+                    GamePhase::Attack | GamePhase::Fortify => {
                         let next_player = self.current_player.next();
                         let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
                         (GamePhase::Reinforce(number_of_reinforcements), next_player)
