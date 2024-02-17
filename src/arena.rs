@@ -4,7 +4,7 @@ use std::fmt::{self};
 use num_cpus;
 use threadpool::ThreadPool;
 
-use crate::game::{Game, GameResult};
+use crate::game::{Game, GameResult, PlayOptions};
 use crate::player::Player;
 use crate::bots::Bot;
 
@@ -50,7 +50,7 @@ pub fn play_games<BotA: Bot + Default, BotB: Bot + Default>(games: u32) -> Resul
         let tx = tx.clone();
         pool.execute(move|| {
             let mut game = Game::new(BotA::default(), BotB::default());
-            tx.send(game.play_until_end().unwrap()).expect("channel will be there waiting for the pool");
+            tx.send(game.play_until_end(&PlayOptions::default()).unwrap()).expect("channel will be there waiting for the pool");
         });
     }
 
