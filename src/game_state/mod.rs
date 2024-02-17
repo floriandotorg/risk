@@ -20,6 +20,11 @@ struct TerritoryState {
     troops: u8,
 }
 
+struct NamedTerritoryState<'a> {
+    territory: Territory,
+    state: &'a TerritoryState,
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum GamePhase {
     Reinforce,

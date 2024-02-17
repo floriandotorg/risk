@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use super::{GamePhase, GameState, Move, TerritoryState};
+use super::{GamePhase, GameState, Move, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
@@ -18,12 +18,33 @@ impl GameState {
         if self.phase == GamePhase::Reinforce {
             for i in 1..number_of_reinforcements {
                 for t in territories.iter() {
-                    moves.push(Move::Reinforce { territory: *t, armies: i });
+                    moves.push(Move::Reinforce { territory: t.territory, armies: i });
                 }
             }
         }
 
-        if self.phase == GamePhase::Attack || self.phase == GamePhase::Fortify {
+        if self.phase == GamePhase::Attack {
+            for territory in self.territories_of_player(self.current_player) {
+                if territory.state.troops < 2 {
+                    continue;
+                }
+
+                for neighbor in territory.territory.neighbors() {
+                    let neighbor_territory = self.territory(neighbor);
+                    if neighbor_territory.player == self.current_player {
+                        continue;
+                    }
+
+                    for attacking in 1..territory.state.troops {
+                        for defending in 1..neighbor_territory.troops {
+                            moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking, defending })
+                        }
+                    }
+                }
+            }
+        }
+
+        if self.phase == GamePhase::Fortify {
             moves.push(Move::Pass);
         }
 
@@ -37,18 +58,22 @@ impl GameState {
         Ok(self.clone())
     }
 
-    pub fn territories_iter(&self) -> impl Iterator<Item = (Territory, &TerritoryState)> {
-        self.territories.iter().enumerate().map(|(i, t)| (Territory::try_from(i as u8).unwrap(), t))
+    fn territory(&self, territory: Territory) -> &TerritoryState {
+        &self.territories[territory as usize]
     }
 
-    fn territories_of_player(&self, player: Player) -> Vec<Territory> {
-        self.territories_iter().filter_map(|(i, t)| if t.player == player { Some(i) } else { None }).collect()
+    pub fn territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
+        self.territories.iter().enumerate().map(|(i, t)| NamedTerritoryState { territory: Territory::try_from(i as u8).unwrap(), state: t })
+    }
+
+    fn territories_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
+        self.territories_iter().filter_map(|territory| if territory.state.player == player { Some(territory) } else { None }).collect()
     }
 
     pub fn continents(&self, player: Player) -> Vec<Continent> {
         let mut result = Continent::iter().collect::<Vec<_>>();
-        for (territory, territory_state) in self.territories_iter() {
-            if territory_state.player != player {
+        for NamedTerritoryState { territory, state } in self.territories_iter() {
+            if state.player != player {
                 let continent = territory.continent();
                 result.retain(|&c| c != continent);
             }
