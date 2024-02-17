@@ -103,7 +103,7 @@ impl GameState {
                     territories: self.territories,
                     phase: next_phase
                 };
-                new_state.add_armies(*territory, number_of_reinforcements as i16, true)?;
+                new_state.add_armies(*territory, *armies as i16, true)?;
                 Ok(GameStateResults::single(new_state))
             },
             Move::Fortify { from, to, armies } => {
