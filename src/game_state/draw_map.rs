@@ -1,4 +1,4 @@
-use std::{fs::File, result};
+use std::fs::File;
 use std::io::BufReader;
 use strum::EnumCount;
 use viuer::{Config, print, };
@@ -82,8 +82,6 @@ impl DrawMapOptions {
         self
     }
 }
-
-use std::panic;
 
 impl GameState {
     pub fn draw_map(&self, options: DrawMapOptions) -> Result<(), cairo::Error> {
