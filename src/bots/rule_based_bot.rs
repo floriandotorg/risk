@@ -7,6 +7,13 @@ use super::Bot;
 
 pub struct RuleBasedBot;
 
+impl RuleBasedBot {
+    fn random_move(&self, game_state: GameState) -> Move {
+        let moves = game_state.legal_moves();
+        moves[rand::thread_rng().gen_range(0..moves.len())]
+    }
+}
+
 impl Bot for RuleBasedBot {
     fn make_move(&self, game_state: GameState) -> Move {
         match game_state.phase() {
@@ -23,6 +30,10 @@ impl Bot for RuleBasedBot {
                             scores[i] += 1 + ((neighbor_territory.armies() as f64 / territory.state().armies() as f64)) as u32;
                         }
                     }
+                }
+
+                if scores.len() < 2 {
+                    return self.random_move(game_state);
                 }
 
                 Move::Reinforce { territory: reinforceable_territories[scores.iter().position_max().unwrap()].territory(), armies: 1 }
@@ -54,8 +65,7 @@ impl Bot for RuleBasedBot {
                 Move::Attack { from: best_attack.0.territory(), to: best_attack.1.territory(), attacking: best_attack.0.state().armies() - 1 }
             }
             _ => {
-                let moves = game_state.legal_moves();
-                moves[rand::thread_rng().gen_range(0..moves.len())]
+                self.random_move(game_state)
             }
         }
     }
