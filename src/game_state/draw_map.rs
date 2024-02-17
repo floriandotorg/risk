@@ -1,14 +1,15 @@
 use std::fs::File;
 use std::io::BufReader;
+use strum::EnumCount;
 use viuer::{Config, print, };
 use cairo;
 use image::{DynamicImage, ImageBuffer};
 
-use crate::territories::TERRITORIES;
+use crate::territories::Territory;
 
 use super::GameState;
 
-const TERRITORY_MAP_COORDS: &[(f64, f64); TERRITORIES.len()] = &[
+const TERRITORY_MAP_COORDS: &[(f64, f64); Territory::COUNT] = &[
     (45.0, 80.0), // Alaska
     (120.0, 74.0), // Northwest Territory
     (270.0, 55.0), // Greenland

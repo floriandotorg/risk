@@ -1,8 +1,7 @@
 use rand::Rng;
-use strum::IntoEnumIterator;
+use strum::{EnumCount, IntoEnumIterator};
 
-use crate::player::Player;
-use crate::territories::TERRITORIES;
+use crate::{player::Player, territories::Territory};
 
 use super::{GameStateDuringInitialPlacement, TerritoryStateDuringInitialPlacement, GameState, TerritoryState, GamePhase};
 
@@ -12,7 +11,7 @@ impl GameStateDuringInitialPlacement {
     pub fn new() -> Self {
         Self {
             current_player: Self::STARTING_PLAYER,
-            territories: TERRITORIES.iter().map(|_| TerritoryStateDuringInitialPlacement { player: None, troops: 0 }).collect::<Vec<_>>().try_into().unwrap()
+            territories: vec![TerritoryStateDuringInitialPlacement { player: None, troops: 0 }; Territory::COUNT].try_into().unwrap()
         }
     }
 

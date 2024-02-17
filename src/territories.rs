@@ -1,53 +1,8 @@
 use num_enum::TryFromPrimitive;
-use strum_macros::EnumIter;
-
-pub const TERRITORIES: &[&'static str] = &[
-    "Alaska",
-    "Northwest Territory",
-    "Greenland",
-    "Alberta",
-    "Ontario",
-    "Quebec",
-    "Western United States",
-    "Eastern United States",
-    "Central America",
-    "Venezuela",
-    "Peru",
-    "Brazil",
-    "Argentina",
-    "Iceland",
-    "Scandinavia",
-    "Ukraine",
-    "Great Britain",
-    "Northern Europe",
-    "Western Europe",
-    "Southern Europe",
-    "North Africa",
-    "Egypt",
-    "East Africa",
-    "Congo",
-    "South Africa",
-    "Madagascar",
-    "Ural",
-    "Siberia",
-    "Yakutsk",
-    "Kamchatka",
-    "Irkutsk",
-    "Mongolia",
-    "China",
-    "Afghanistan",
-    "Middle East",
-    "India",
-    "Siam",
-    "Indonesia",
-    "New Guinea",
-    "Western Australia",
-    "Eastern Australia",
-    "Japan",
-];
+use strum_macros::{EnumCount, EnumIter};
 
 #[repr(u8)]
-#[derive(PartialEq, Eq, Clone, Copy, Debug, TryFromPrimitive)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, EnumCount, TryFromPrimitive)]
 pub enum Territory {
     Alaska = 00,
     NorthwestTerritory = 01,
@@ -286,6 +241,55 @@ impl Territory {
             }
         }
         result
+    }
+}
+
+impl std::fmt::Display for Territory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Territory::Alaska => "Alaska",
+            Territory::NorthwestTerritory => "Northwest Territory",
+            Territory::Greenland => "Greenland",
+            Territory::Alberta => "Alberta",
+            Territory::Ontario => "Ontario",
+            Territory::Quebec => "Quebec",
+            Territory::WesternUnitedStates => "Western United States",
+            Territory::EasternUnitedStates => "Eastern United States",
+            Territory::CentralAmerica => "Central America",
+            Territory::Venezuela => "Venezuela",
+            Territory::Peru => "Peru",
+            Territory::Brazil => "Brazil",
+            Territory::Argentina => "Argentina",
+            Territory::Iceland => "Iceland",
+            Territory::Scandinavia => "Scandinavia",
+            Territory::Ukraine => "Ukraine",
+            Territory::GreatBritain => "Great Britain",
+            Territory::NorthernEurope => "Northern Europe",
+            Territory::WesternEurope => "Western Europe",
+            Territory::SouthernEurope => "Southern Europe",
+            Territory::NorthAfrica => "North Africa",
+            Territory::Egypt => "Egypt",
+            Territory::EastAfrica => "East Africa",
+            Territory::Congo => "Congo",
+            Territory::SouthAfrica => "South Africa",
+            Territory::Madagascar => "Madagascar",
+            Territory::Ural => "Ural",
+            Territory::Siberia => "Siberia",
+            Territory::Yakutsk => "Yakutsk",
+            Territory::Kamchatka => "Kamchatka",
+            Territory::Irkutsk => "Irkutsk",
+            Territory::Mongolia => "Mongolia",
+            Territory::China => "China",
+            Territory::Afghanistan => "Afghanistan",
+            Territory::MiddleEast => "Middle East",
+            Territory::India => "India",
+            Territory::Siam => "Siam",
+            Territory::Indonesia => "Indonesia",
+            Territory::NewGuinea => "New Guinea",
+            Territory::WesternAustralia => "Western Australia",
+            Territory::EasternAustralia => "Eastern Australia",
+            Territory::Japan => "Japan",
+        })
     }
 }
 

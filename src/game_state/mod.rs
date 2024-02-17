@@ -1,5 +1,7 @@
+use strum::EnumCount;
+
 use crate::player::Player;
-use crate::territories::TERRITORIES;
+use crate::territories::Territory;
 
 #[derive(Debug, Clone)]
 struct TerritoryStateDuringInitialPlacement {
@@ -9,7 +11,7 @@ struct TerritoryStateDuringInitialPlacement {
 
 pub struct GameStateDuringInitialPlacement {
     current_player: Player,
-    territories: [TerritoryStateDuringInitialPlacement; TERRITORIES.len()]
+    territories: [TerritoryStateDuringInitialPlacement; Territory::COUNT]
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -28,16 +30,16 @@ enum GamePhase {
 #[derive(Copy, Clone)]
 pub struct GameState {
     current_player: Player,
-    territories: [TerritoryState; TERRITORIES.len()],
+    territories: [TerritoryState; Territory::COUNT],
     phase: GamePhase,
 }
 
 #[derive(PartialEq)]
 pub enum Move {
     Pass,
-    Reinforce(u8, u8),
-    Move(u8, u8, u8),
-    Attack(u8, u8, u8, u8)
+    Reinforce { territory: Territory, armies: u8 },
+    Move { from: Territory, to: Territory, armies: u8 },
+    Attack { from: Territory, to: Territory, attacking: u8, defending: u8 }
 }
 
 pub mod initial_placement;

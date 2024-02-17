@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use super::{GameState, Move, GamePhase};
+use super::{GamePhase, GameState, Move, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
@@ -10,7 +10,7 @@ impl GameState {
         let territories = self.territories_of_player(self.current_player);
         let number_of_reinforcements = match territories.len() {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
-            0 | 1 | 2 | 3 |4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
+            0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
             14 | 15 | 16 => 4,
             _ => 5
         };
@@ -18,7 +18,7 @@ impl GameState {
         if self.phase == GamePhase::Reinforce {
             for i in 1..number_of_reinforcements {
                 for t in territories.iter() {
-                    moves.push(Move::Reinforce(*t as u8, i));
+                    moves.push(Move::Reinforce { territory: *t, armies: i });
                 }
             }
         }
@@ -34,17 +34,20 @@ impl GameState {
         if !self.legal_moves().contains(move_to_play) {
             return Err("Illegal move");
         }
-        return Ok(self.clone());
+        Ok(self.clone())
     }
 
-    fn territories_of_player(&self, player: Player) -> Vec<usize> {
-        self.territories.iter().enumerate().filter_map(|(i, t)| if t.player == player { Some(i) } else { None }).collect()
+    pub fn territories_iter(&self) -> impl Iterator<Item = (Territory, &TerritoryState)> {
+        self.territories.iter().enumerate().map(|(i, t)| (Territory::try_from(i as u8).unwrap(), t))
+    }
+
+    fn territories_of_player(&self, player: Player) -> Vec<Territory> {
+        self.territories_iter().filter_map(|(i, t)| if t.player == player { Some(i) } else { None }).collect()
     }
 
     pub fn continents(&self, player: Player) -> Vec<Continent> {
         let mut result = Continent::iter().collect::<Vec<_>>();
-        for (idx, territory_state) in self.territories.iter().enumerate() {
-            let territory = Territory::try_from(idx as u8).unwrap();
+        for (territory, territory_state) in self.territories_iter() {
             if territory_state.player != player {
                 let continent = territory.continent();
                 result.retain(|&c| c != continent);
