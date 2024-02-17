@@ -3,7 +3,7 @@ use strum::{EnumCount, IntoEnumIterator};
 
 use crate::{player::Player, territories::Territory};
 
-use super::{GameStateDuringInitialPlacement, TerritoryStateDuringInitialPlacement, GameState, TerritoryState, GamePhase};
+use super::{GamePhase, GameState, GameStateDuringInitialPlacement, TerritoryState, TerritoryStateDuringInitialPlacement};
 
 impl GameStateDuringInitialPlacement {
     const STARTING_PLAYER: Player = Player::A;
@@ -16,10 +16,14 @@ impl GameStateDuringInitialPlacement {
     }
 
     pub fn start(&self) -> GameState {
+        let territories = self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), troops: t.troops}).collect::<Vec<_>>();
+        let current_player = Self::STARTING_PLAYER;
+        let territories_of_starting_player = territories.iter().filter(|territory| territory.player == current_player).count();
+        let number_of_reinforcements = GameState::number_of_reinforcements(territories_of_starting_player);
         GameState {
-            current_player: Self::STARTING_PLAYER,
-            territories: self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), troops: t.troops}).collect::<Vec<_>>().try_into().unwrap(),
-            phase: GamePhase::Reinforce
+            current_player,
+            territories: territories.try_into().unwrap(),
+            phase: GamePhase::Reinforce(number_of_reinforcements),
         }
     }
 

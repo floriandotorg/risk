@@ -4,27 +4,30 @@ use super::{GamePhase, GameState, Move, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
-    pub fn legal_moves(&self) -> Vec<Move> {
-        let mut moves = Vec::new();
-
-        let territories = self.territories_of_player(self.current_player);
-        let number_of_reinforcements = match territories.len() {
+    pub fn number_of_reinforcements(territories: usize) -> u8 {
+        match territories {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
             0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
             14 | 15 | 16 => 4,
             _ => 5
-        };
+        }
+    }
 
-        if self.phase == GamePhase::Reinforce {
+    pub fn legal_moves(&self) -> Vec<Move> {
+        let mut moves = Vec::new();
+
+        let territories = self.territories_of_player(self.current_player);
+
+        if let GamePhase::Reinforce(number_of_reinforcements) = self.phase {
             for i in 1..number_of_reinforcements {
-                for t in territories.iter() {
+                for t in &territories {
                     moves.push(Move::Reinforce { territory: t.territory, armies: i });
                 }
             }
         }
 
         if self.phase == GamePhase::Attack {
-            for territory in self.territories_of_player(self.current_player) {
+            for territory in &territories {
                 if territory.state.troops < 2 {
                     continue;
                 }

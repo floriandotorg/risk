@@ -27,7 +27,7 @@ struct NamedTerritoryState<'a> {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum GamePhase {
-    Reinforce,
+    Reinforce(u8),
     Attack,
     Fortify,
 }
