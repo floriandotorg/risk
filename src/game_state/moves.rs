@@ -15,6 +15,10 @@ impl GameState {
     }
 
     pub fn legal_moves(&self) -> Vec<Move> {
+        if self.is_finished() {
+            return vec![];
+        }
+
         let mut moves = Vec::new();
 
         let territories = self.territories_of_player(self.current_player);
@@ -73,6 +77,10 @@ impl GameState {
     }
 
     pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, MoveApplyErr> {
+        if self.is_finished() {
+            return Err(MoveApplyErr::GameFinished);
+        }
+
         match move_to_play {
             Move::Pass => {
                 let (next_phase, next_player) = match self.phase {

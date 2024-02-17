@@ -57,6 +57,7 @@ pub enum MoveApplyErr {
     ToTerritoryNotOwned,
     ToTerritoryOwned,
     IllegalMove,
+    GameFinished
 }
 
 pub mod initial_placement;
