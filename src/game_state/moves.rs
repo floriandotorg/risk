@@ -43,8 +43,8 @@ impl GameState {
                         for armies in 1..territory.state.armies {
                             if neighbor_territory.player == self.current_player {
                                 moves.push(Move::Fortify { from: territory.territory, to: neighbor, armies })
-                            } else if self.phase == GamePhase::Attack {
-                                for defending in 1..neighbor_territory.armies {
+                            } else if self.phase == GamePhase::Attack && armies <= 3 {
+                                for defending in 1..=std::cmp::min(neighbor_territory.armies, 2) {
                                     moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking: armies, defending })
                                 }
                             }
