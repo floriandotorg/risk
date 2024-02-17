@@ -154,7 +154,7 @@ impl GameState {
         if new_armies <= 0 {
             return Err(MoveApplyErr::TooManyUnitsMoved);
         }
-        self.territories[index].armies = new_armies as u8;
+        self.territories[index].armies = new_armies.try_into().unwrap();
         Ok(())
     }
 
