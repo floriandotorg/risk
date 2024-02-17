@@ -57,7 +57,7 @@ const TERRITORY_MAP_COORDS: &[(f64, f64); Territory::COUNT] = &[
 ];
 
 impl GameState {
-    pub fn draw_map_with_filename(&self, filename: &str, shoud_print: bool) -> Result<(), cairo::Error> {
+    pub fn draw_map_with_filename(&self, filename: &str, should_print: bool) -> Result<(), cairo::Error> {
         let width: u32 = 800;
         let height: u32 = 533;
 
@@ -101,7 +101,7 @@ impl GameState {
 
         img.save(filename).unwrap();
 
-        if shoud_print {
+        if should_print {
             print(&img, &Config {
                 width: Some(80),
                 ..Default::default()
