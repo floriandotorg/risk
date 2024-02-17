@@ -88,6 +88,6 @@ pub enum MoveApplyErr {
 
 pub mod initial_placement;
 pub mod moves;
-pub mod move_results;
+pub mod apply_move_result;
 pub mod draw_map;
 pub mod display;

@@ -3,7 +3,7 @@ use strum::IntoEnumIterator;
 use itertools::Itertools;
 use counter::Counter;
 
-use super::{move_results::GameStateResults, GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
+use super::{apply_move_result::ApplyMoveResult, GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy)]
@@ -84,7 +84,7 @@ impl GameState {
         moves
     }
 
-    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameStateResults, MoveApplyErr> {
+    pub fn apply_move(&self, move_to_play: &Move) -> Result<ApplyMoveResult, MoveApplyErr> {
         if self.is_finished() {
             return Err(MoveApplyErr::GameFinished);
         }
@@ -99,7 +99,7 @@ impl GameState {
                         (GamePhase::Reinforce(number_of_reinforcements), next_player)
                     },
                 };
-                Ok(GameStateResults::single(GameState {
+                Ok(ApplyMoveResult::single(GameState {
                     current_player: next_player,
                     territories: self.territories,
                     phase: next_phase
@@ -126,7 +126,7 @@ impl GameState {
                     phase: next_phase
                 };
                 new_state.add_armies(*territory, *armies as i16)?;
-                Ok(GameStateResults::single(new_state))
+                Ok(ApplyMoveResult::single(new_state))
             },
             Move::Fortify { from, to, armies } => {
                 if self.phase != GamePhase::Fortify && self.phase != GamePhase::Attack {
@@ -139,7 +139,7 @@ impl GameState {
 
                 let next_player = self.current_player.next();
                 let number_of_reinforcements = self.number_of_reinforcements(next_player);
-                Ok(GameStateResults::single(GameState {
+                Ok(ApplyMoveResult::single(GameState {
                     current_player: next_player,
                     territories: new_state.territories,
                     phase: GamePhase::Reinforce(number_of_reinforcements)
@@ -153,7 +153,7 @@ impl GameState {
                     return Err(MoveApplyErr::ZeroUnitsInAttack);
                 }
 
-                let mut new_states = GameStateResults::new();
+                let mut new_states = ApplyMoveResult::new();
 
                 let attacking_dice = std::cmp::min(*attacking, 3);
                 let defending_territory = self.territory_state(*to);
@@ -298,8 +298,8 @@ mod tests {
         let start = dummy_state(GamePhase::Attack);
         let result = start.apply_move(&Move::Pass);
         let result = result.unwrap();
-        assert_eq!(result.results().len(), 1);
-        let result = &result.results()[0];
+        assert_eq!(result.states_with_count().len(), 1);
+        let result = &result.states_with_count()[0];
         assert_eq!(result.count(), 1);
         assert_eq!(result.state().current_player, Player::B);
         assert!(matches!(result.state().phase, GamePhase::Reinforce(..)));
@@ -310,8 +310,8 @@ mod tests {
         let start = dummy_state(GamePhase::Attack);
         let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
         let result = result.unwrap();
-        assert_eq!(result.results().len(), 2);
-        for state_result in result.results() {
+        assert_eq!(result.states_with_count().len(), 2);
+        for state_result in result.states_with_count() {
             assert!(state_result.count() > 0);
             let state = state_result.state();
             assert_eq!(state.current_player, Player::A);
