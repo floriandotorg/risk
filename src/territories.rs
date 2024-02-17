@@ -242,6 +242,10 @@ impl Territory {
         }
         result
     }
+
+    pub fn neighboring(self, neighbor: Territory) -> bool {
+        NEIGHBORS.iter().any(|&(neighbor_start, neighbor_end)| (neighbor_start == self && neighbor_end == neighbor) || (neighbor_start == neighbor && neighbor_end == self))
+    }
 }
 
 impl std::fmt::Display for Territory {
@@ -293,6 +297,3 @@ impl std::fmt::Display for Territory {
     }
 }
 
-pub fn compare_connection(start: Territory, end: Territory) -> bool {
-    NEIGHBORS.iter().any(|&(neighbor_start, neighbor_end)| (neighbor_start == start && neighbor_end == end) || (neighbor_start == end && neighbor_end == start))
-}

@@ -132,6 +132,9 @@ impl GameState {
                 if self.phase != GamePhase::Fortify && self.phase != GamePhase::Attack {
                     return Err(MoveApplyErr::MoveNotInPhase(*move_to_play, self.phase))
                 }
+                if !from.neighboring(*to) {
+                    return Err(MoveApplyErr::NonAdjacentTerritories);
+                }
 
                 let mut new_state = self.clone();
                 new_state.add_armies(*from, -(*armies as i16))?;
@@ -151,6 +154,9 @@ impl GameState {
                 }
                 if *attacking == 0 {
                     return Err(MoveApplyErr::ZeroUnitsInAttack);
+                }
+                if !from.neighboring(*to) {
+                    return Err(MoveApplyErr::NonAdjacentTerritories);
                 }
 
                 let mut new_states = ApplyMoveResult::new();
