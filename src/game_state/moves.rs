@@ -107,11 +107,16 @@ impl GameState {
                 if *armies > number_of_reinforcements {
                     return Err(MoveApplyErr::TooManyReinforcements);
                 }
+                let remaining_reinforcements = number_of_reinforcements - *armies;
+                let next_phase = match remaining_reinforcements {
+                    0 => GamePhase::Attack,
+                    _ => GamePhase::Reinforce(remaining_reinforcements)
+                };
 
                 let mut new_state = GameState {
                     current_player: self.current_player,
                     territories: self.territories,
-                    phase: GamePhase::Attack
+                    phase: next_phase
                 };
                 new_state.add_armies(*territory, number_of_reinforcements as i16, true)?;
                 Ok(new_state)
