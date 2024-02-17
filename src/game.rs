@@ -61,7 +61,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
             return Ok((Some(GameResult::Win(self.game_state.current_player())), vec![]))
         }
 
-        if self.round >= 2000 {
+        if self.round >= 200 {
             return Ok((Some(GameResult::Draw), vec![]))
         }
 
