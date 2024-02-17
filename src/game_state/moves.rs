@@ -144,6 +144,8 @@ impl GameState {
                     return Err(MoveApplyErr::ZeroUnitsInAttack);
                 }
 
+                let mut new_states = GameStateResults::new();
+
                 let attacking_territory = self.territory_state(*from);
                 let defending_territory = self.territory_state(*to);
                 let conquer = attacking_territory.armies > defending_territory.armies;
@@ -155,7 +157,8 @@ impl GameState {
                     new_state.add_armies(*from, -(*attacking as i16))?;
                 }
 
-                Ok(GameStateResults::single(new_state))
+                new_states.push(new_state, 1);
+                Ok(new_states)
             },
         }
     }

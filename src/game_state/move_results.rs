@@ -24,11 +24,19 @@ impl GameStateResults {
         GameStateResults { result: vec![GameStateResult { state, count: 1 }] }
     }
 
+    pub fn new() -> Self {
+        GameStateResults { result: vec![] }
+    }
+
     pub fn all_counts(&self) -> usize {
         self.result.iter().map(|result| result.count).sum()
     }
 
     pub fn results(&self) -> &[GameStateResult] {
         &self.result
+    }
+
+    pub fn push(&mut self, state: GameState, count: usize) {
+        self.result.push(GameStateResult { state, count })
     }
 }
