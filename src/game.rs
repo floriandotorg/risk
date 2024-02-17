@@ -20,7 +20,7 @@ pub enum GameResult {
 }
 
 pub struct Game<BotA: Bot, BotB: Bot> {
-    round: u32,
+    round: u16,
     bot_a: BotA,
     bot_b: BotB,
     game_state: GameState,
@@ -97,7 +97,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         Ok((None, moves_played))
     }
 
-    pub fn play_until_end(&mut self, options: &PlayOptions) -> Result<GameResult, MoveApplyErr> {
+    pub fn play_until_end(&mut self, options: &PlayOptions) -> Result<(u16, GameResult), MoveApplyErr> {
         if let Some(folder) = &options.filename {
             recreate_folder(folder).expect("Could not recreate folder");
         }
@@ -110,10 +110,10 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
             }
             result = self.play_round(round_options)?.0;
         }
-        Ok(result.unwrap())
+        Ok((self.round, result.unwrap()))
     }
 
-    pub fn round(&self) -> u32 {
+    pub fn round(&self) -> u16 {
         self.round
     }
 }
