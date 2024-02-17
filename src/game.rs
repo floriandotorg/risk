@@ -74,7 +74,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         }
 
         if options.debug_output {
-            println!("Round {}", self.round + 1);
+            println!("Round {} ({})", self.round + 1, self.game_state.current_player());
         }
 
         let mut moves_played = vec![];
@@ -106,7 +106,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         while result.is_none() {
             let mut round_options = options.clone();
             if let Some(folder) = &options.filename {
-                round_options.filename = Some(format!("./{}/{}.png", folder, self.round));
+                round_options.filename = Some(format!("./{}/{}.png", folder, self.round + 1));
             }
             result = self.play_round(round_options)?.0;
         }
