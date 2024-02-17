@@ -4,14 +4,29 @@ use super::{move_results::GameStateResults, GamePhase, GameState, Move, MoveAppl
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
-    pub fn number_of_reinforcements(territories: &[TerritoryState], player: Player) -> u8 {
-        let territories_of_player = territories.iter().filter(|territory| territory.player == player).count();
-        match territories_of_player {
+    fn continent_bonus(continent: Continent) -> u8 {
+        match continent {
+            Continent::NorthAmerica => 5,
+            Continent::SouthAmerica => 2,
+            Continent::Europe => 5,
+            Continent::Africa => 3,
+            Continent::Asia => 7,
+            Continent::Oceania => 2,
+        }
+    }
+
+    pub fn number_of_reinforcements(&self, player: Player) -> u8 {
+        let territories_of_player = self.territories.iter().filter(|territory| territory.player == player).count();
+        let mut from_territories = match territories_of_player {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
             0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
             14 | 15 | 16 => 4,
             _ => 5
+        };
+        for continent in self.continents_for_player(player) {
+            from_territories += GameState::continent_bonus(continent);
         }
+        from_territories
     }
 
     pub fn legal_moves(&self) -> Vec<Move> {
@@ -21,7 +36,7 @@ impl GameState {
 
         let mut moves = Vec::new();
 
-        let territories = self.territories_of_player(self.current_player);
+        let territories = self.territories_states_of_player(self.current_player);
 
         match self.phase {
             GamePhase::Reinforce(number_of_reinforcements) => {
@@ -40,7 +55,7 @@ impl GameState {
                     }
 
                     for neighbor in territory.territory.neighbors() {
-                        let neighbor_territory = self.territory(neighbor);
+                        let neighbor_territory = self.territory_state(neighbor);
 
                         for armies in 1..territory.state.armies {
                             if neighbor_territory.player == self.current_player {
@@ -71,7 +86,7 @@ impl GameState {
                     GamePhase::Reinforce(armies) => return Err(MoveApplyErr::MoveNotInPhase(Move::Pass, GamePhase::Reinforce(armies))),
                     GamePhase::Attack | GamePhase::Fortify => {
                         let next_player = self.current_player.next();
-                        let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
+                        let number_of_reinforcements = self.number_of_reinforcements(next_player);
                         (GamePhase::Reinforce(number_of_reinforcements), next_player)
                     },
                 };
@@ -114,7 +129,7 @@ impl GameState {
                 new_state.add_armies(*to, *armies as i16)?;
 
                 let next_player = self.current_player.next();
-                let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
+                let number_of_reinforcements = self.number_of_reinforcements(next_player);
                 Ok(GameStateResults::single(GameState {
                     current_player: next_player,
                     territories: new_state.territories,
@@ -129,8 +144,8 @@ impl GameState {
                     return Err(MoveApplyErr::ZeroUnitsInAttack);
                 }
 
-                let attacking_territory = self.territory(*from);
-                let defending_territory = self.territory(*to);
+                let attacking_territory = self.territory_state(*from);
+                let defending_territory = self.territory_state(*to);
                 let conquer = attacking_territory.armies > defending_territory.armies;
                 let mut new_state = self.clone();
                 if conquer {
@@ -150,7 +165,7 @@ impl GameState {
         self.clone()
     }
 
-    pub fn territory(&self, territory: Territory) -> &TerritoryState {
+    pub fn territory_state(&self, territory: Territory) -> &TerritoryState {
         &self.territories[territory as usize]
     }
 
@@ -184,11 +199,11 @@ impl GameState {
         self.territories.iter().enumerate().map(|(i, t)| NamedTerritoryState { territory: Territory::try_from(i as u8).unwrap(), state: t })
     }
 
-    pub fn territories_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
+    pub fn territories_states_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
         self.territories_iter().filter_map(|territory| if territory.state.player == player { Some(territory) } else { None }).collect()
     }
 
-    pub fn continents(&self, player: Player) -> Vec<Continent> {
+    pub fn continents_for_player(&self, player: Player) -> Vec<Continent> {
         let mut result = Continent::iter().collect::<Vec<_>>();
         for NamedTerritoryState { territory, state } in self.territories_iter() {
             if state.player != player {

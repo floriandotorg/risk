@@ -18,12 +18,13 @@ impl GameStateDuringInitialPlacement {
     pub fn start(&self) -> GameState {
         let territories = self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), armies: t.armies}).collect::<Vec<_>>();
         let current_player = Self::STARTING_PLAYER;
-        let number_of_reinforcements = GameState::number_of_reinforcements(&territories, current_player);
-        GameState {
+        let mut state = GameState {
             current_player,
             territories: territories.try_into().unwrap(),
-            phase: GamePhase::Reinforce(number_of_reinforcements),
-        }
+            phase: GamePhase::Reinforce(0),
+        };
+        state.phase = GamePhase::Reinforce(state.number_of_reinforcements(state.current_player()));
+        state
     }
 
     pub fn place_random(&self) -> GameStateDuringInitialPlacement {
