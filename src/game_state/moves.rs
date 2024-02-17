@@ -298,39 +298,46 @@ mod tests {
         }
     }
 
+    const DEFAULT_PLAYER: Player = Player::A;
+    const DEFAULT_ARMIES: u8 = 1;
     const TARGET_TERRITORY: Territory = Territory::Alaska;
     const SOURCE_TERRITORY: Territory = Territory::NorthwestTerritory;
     const SOURCE_TERRITORY_ARMIES: u8 = 10;
-    const TARGET_TERRITORY_ARMIES: u8 = 3;
 
-    fn dummy_state(phase: GamePhase, target_armies: u8) -> GameState {
+    fn dummy_state(phase: GamePhase) -> GameState {
         let mut state = GameState {
             current_player: Player::A,
-            territories: [TerritoryState {player: Player::A, armies: 1}; Territory::COUNT],
+            territories: [TerritoryState {player: DEFAULT_PLAYER, armies: DEFAULT_ARMIES}; Territory::COUNT],
             phase,
         };
         state.territory_mut(TARGET_TERRITORY).player = Player::B;
-        state.territory_mut(TARGET_TERRITORY).armies = target_armies;
-
         state.territory_mut(SOURCE_TERRITORY).armies = SOURCE_TERRITORY_ARMIES;
+        state
+    }
+
+    fn dummy_state_with_armies(phase: GamePhase, target_armies: u8) -> GameState {
+        let mut state = dummy_state(phase);
+        state.territory_mut(TARGET_TERRITORY).armies = target_armies;
         state
     }
 
     #[test]
     fn attack_pass_skips() {
-        let start = dummy_state(GamePhase::Attack, TARGET_TERRITORY_ARMIES);
+        let start = dummy_state(GamePhase::Attack);
         let result = start.apply_move(&Move::Pass);
         let result = result.unwrap();
         assert_eq!(result.states_with_count().len(), 1);
         let result = &result.states_with_count()[0];
         assert_eq!(result.count(), 1);
         assert_eq!(result.state().current_player, Player::B);
-        assert!(matches!(result.state().phase, GamePhase::Reinforce(..)));
+        assert_eq!(result.state().phase, GamePhase::Reinforce(3));
     }
 
     #[test]
     fn attack_other_player() {
-        let start = dummy_state(GamePhase::Attack, TARGET_TERRITORY_ARMIES);
+        const TARGET_TERRITORY_ARMIES: u8 = 3;
+
+        let start = dummy_state_with_armies(GamePhase::Attack, TARGET_TERRITORY_ARMIES);
         let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
         let result = result.unwrap();
         assert_eq!(result.states_with_count().len(), 2);
@@ -357,7 +364,7 @@ mod tests {
 
     #[test]
     fn attack_and_capture() {
-        let start = dummy_state(GamePhase::Attack, 1);
+        let start = dummy_state_with_armies(GamePhase::Attack, 1);
         let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
         let result = result.unwrap();
         assert_eq!(result.states_with_count().len(), 2);
