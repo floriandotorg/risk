@@ -43,7 +43,7 @@ pub struct GameState {
 pub enum Move {
     Pass,
     Reinforce { territory: Territory, armies: u8 },
-    Move { from: Territory, to: Territory, armies: u8 },
+    Fortify { from: Territory, to: Territory, armies: u8 },
     Attack { from: Territory, to: Territory, attacking: u8, defending: u8 }
 }
 

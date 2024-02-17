@@ -18,37 +18,54 @@ impl GameState {
 
         let territories = self.territories_of_player(self.current_player);
 
-        if let GamePhase::Reinforce(number_of_reinforcements) = self.phase {
-            for i in 1..number_of_reinforcements {
-                for t in &territories {
-                    moves.push(Move::Reinforce { territory: t.territory, armies: i });
+        match self.phase {
+            GamePhase::Reinforce(number_of_reinforcements) => {
+                for armies in 1..number_of_reinforcements {
+                    for t in &territories {
+                        moves.push(Move::Reinforce { territory: t.territory, armies });
+                    }
                 }
             }
-        }
-
-        if self.phase == GamePhase::Attack {
-            for territory in &territories {
-                if territory.state.armies < 2 {
-                    continue;
-                }
-
-                for neighbor in territory.territory.neighbors() {
-                    let neighbor_territory = self.territory(neighbor);
-                    if neighbor_territory.player == self.current_player {
+            GamePhase::Attack => {
+                for territory in &territories {
+                    if territory.state.armies < 2 {
                         continue;
                     }
 
-                    for attacking in 1..territory.state.armies {
-                        for defending in 1..neighbor_territory.armies {
-                            moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking, defending })
+                    for neighbor in territory.territory.neighbors() {
+                        let neighbor_territory = self.territory(neighbor);
+                        if neighbor_territory.player == self.current_player {
+                            continue;
+                        }
+
+                        for attacking in 1..territory.state.armies {
+                            for defending in 1..neighbor_territory.armies {
+                                moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking, defending })
+                            }
                         }
                     }
                 }
+                moves.push(Move::Pass);
             }
-        }
+            GamePhase::Fortify => {
+                for territory in &territories {
+                    if territory.state.armies < 2 {
+                        continue;
+                    }
 
-        if self.phase == GamePhase::Fortify {
-            moves.push(Move::Pass);
+                    for neighbor in territory.territory.neighbors() {
+                        let neighbor_territory = self.territory(neighbor);
+                        if neighbor_territory.player != self.current_player {
+                            continue;
+                        }
+
+                        for armies in 1..territory.state.armies {
+                            moves.push(Move::Fortify { from: territory.territory, to: neighbor, armies })
+                        }
+                    }
+                }
+                moves.push(Move::Pass);
+            }
         }
 
         moves

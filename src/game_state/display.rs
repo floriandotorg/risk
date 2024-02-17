@@ -17,7 +17,7 @@ impl fmt::Debug for Move {
         match self {
             Move::Pass => write!(f, "Pass"),
             Move::Reinforce{territory, armies} => write!(f, "Reinforce({} with {})", territory, armies),
-            Move::Move{ from, to, armies} => write!(f, "Move {} from {} to {}", armies, from, to),
+            Move::Fortify{ from, to, armies} => write!(f, "Fortify {} from {} to {}", armies, from, to),
             Move::Attack{ from, to, attacking, defending} => write!(f, "Attack {} with {} from {} defending with {}",  from, attacking, to, defending),
         }
     }
