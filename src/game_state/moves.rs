@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use super::{GamePhase, GameState, Move, NamedTerritoryState, TerritoryState};
+use super::{GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
@@ -71,11 +71,16 @@ impl GameState {
         moves
     }
 
-    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, &'static str> {
+    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, MoveApplyErr> {
         if !self.legal_moves().contains(move_to_play) {
-            return Err("Illegal move");
+            return Err(MoveApplyErr::IllegalMove);
         }
-        Ok(self.clone())
+        Ok(self.apply_move_hack())
+    }
+
+    fn apply_move_hack(&self) -> GameState {
+        // todo!("applying this move is not yet implemented");
+        self.clone()
     }
 
     fn territory(&self, territory: Territory) -> &TerritoryState {

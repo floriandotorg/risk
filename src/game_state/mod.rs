@@ -47,6 +47,12 @@ pub enum Move {
     Attack { from: Territory, to: Territory, attacking: u8, defending: u8 }
 }
 
+#[derive(Debug)]
+pub enum MoveApplyErr {
+    TooManyMoves,
+    IllegalMove,
+}
+
 pub mod initial_placement;
 pub mod moves;
 pub mod draw_map;

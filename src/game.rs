@@ -1,4 +1,4 @@
-use crate::game_state::{GameState, GameStateDuringInitialPlacement, Move};
+use crate::game_state::{GameState, GameStateDuringInitialPlacement, Move, MoveApplyErr};
 use crate::player::Player;
 use crate::bots::Bot;
 
@@ -20,7 +20,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         Self { round: 0, bot_a, bot_b, game_state: GameStateDuringInitialPlacement::new().place_random().start() }
     }
 
-    pub fn play_round(&mut self) -> Result<(Option<GameResult>, Vec<Move>), &'static str> {
+    pub fn play_round(&mut self) -> Result<(Option<GameResult>, Vec<Move>), MoveApplyErr> {
         if self.game_state.is_finished() {
             return Ok((Some(GameResult::Win(self.game_state.current_player())), vec![]))
         }
@@ -37,7 +37,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
             self.game_state = self.game_state.apply_move(&move_to_play)?;
             moves_played.push(move_to_play);
             if moves_played.len() > 100 {
-                return Err("Too many moves played");
+                return Err(MoveApplyErr::TooManyMoves);
             }
         }
 
@@ -46,7 +46,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         Ok((None, moves_played))
     }
 
-    pub fn play_until_end(&mut self) -> Result<GameResult, &'static str> {
+    pub fn play_until_end(&mut self) -> Result<GameResult, MoveApplyErr> {
         let mut result: Option<GameResult> = None;
         while result.is_none() {
             result = self.play_round()?.0;
