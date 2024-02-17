@@ -162,10 +162,10 @@ impl GameState {
             return Ok(())
         }
         let new_armies = self.territories[index].armies as i16 + armies;
-        if new_armies <= 0 {
-            return Err(MoveApplyErr::TooManyUnitsMoved);
-        }
-        self.territories[index].armies = new_armies.try_into().unwrap();
+        self.territories[index].armies = match new_armies.try_into() {
+            Ok(new_armies) => new_armies,
+            Err(_) => return Err(MoveApplyErr::TooManyUnitsMoved),
+        };
         Ok(())
     }
 
