@@ -30,12 +30,17 @@ impl TerritoryState {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct NamedTerritoryState<'a> {
     territory: Territory,
     state: &'a TerritoryState,
 }
 
 impl NamedTerritoryState<'_> {
+    pub fn new(territory: Territory, state: &TerritoryState) -> NamedTerritoryState {
+        NamedTerritoryState { territory, state }
+    }
+
     pub fn territory(&self) -> Territory {
         self.territory
     }
