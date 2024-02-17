@@ -50,7 +50,9 @@ pub enum Move {
 #[derive(Debug)]
 pub enum MoveApplyErr {
     MoveNotInPhase(Move, GamePhase),
+    TooManyReinforcements,
     TooManyMoves,
+    FromTerritoryNotOwned,
     IllegalMove,
 }
 

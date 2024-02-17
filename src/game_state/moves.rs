@@ -90,6 +90,24 @@ impl GameState {
                     phase: next_phase
                 })
             },
+            Move::Reinforce { territory, armies } => {
+                let number_of_reinforcements = match self.phase {
+                    GamePhase::Reinforce(number_of_reinforcements) => number_of_reinforcements,
+                    _ => return Err(MoveApplyErr::MoveNotInPhase(*move_to_play, self.phase)),
+                };
+
+                if *armies > number_of_reinforcements {
+                    return Err(MoveApplyErr::TooManyReinforcements);
+                }
+
+                let mut new_state = GameState {
+                    current_player: self.current_player,
+                    territories: self.territories,
+                    phase: GamePhase::Attack
+                };
+                new_state.add_armies(*territory, number_of_reinforcements as i16, true)?;
+                Ok(new_state)
+            },
             _ => {
                 if !self.legal_moves().contains(move_to_play) {
                     return Err(MoveApplyErr::IllegalMove);
@@ -107,6 +125,15 @@ impl GameState {
 
     fn territory(&self, territory: Territory) -> &TerritoryState {
         &self.territories[territory as usize]
+    }
+
+    fn add_armies(&mut self, territory: Territory, armies: i16, is_starting: bool) -> Result<(), MoveApplyErr> {
+        let index = territory as usize;
+        if self.territories[index].player != self.current_player {
+            return Err(if is_starting { MoveApplyErr::FromTerritoryNotOwned } else { MoveApplyErr::ToTerritoryNotOwned });
+        }
+        self.territories[index].armies = (self.territories[index].armies as i16 + armies) as u8;
+        Ok(())
     }
 
     pub fn territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
