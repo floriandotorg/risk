@@ -25,7 +25,7 @@ impl GameState {
 
         match self.phase {
             GamePhase::Reinforce(number_of_reinforcements) => {
-                for armies in 1..number_of_reinforcements {
+                for armies in 1..=number_of_reinforcements {
                     for t in &territories {
                         moves.push(Move::Reinforce { territory: t.territory, armies });
                     }
