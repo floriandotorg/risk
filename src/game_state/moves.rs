@@ -103,7 +103,7 @@ impl GameState {
                     territories: self.territories,
                     phase: next_phase
                 };
-                new_state.add_armies(*territory, *armies as i16, true)?;
+                new_state.add_armies(*territory, *armies as i16)?;
                 Ok(GameStateResults::single(new_state))
             },
             Move::Fortify { from, to, armies } => {
@@ -112,8 +112,8 @@ impl GameState {
                 }
 
                 let mut new_state = self.clone();
-                new_state.add_armies(*from, -(*armies as i16), true)?;
-                new_state.add_armies(*to, *armies as i16, false)?;
+                new_state.add_armies(*from, -(*armies as i16))?;
+                new_state.add_armies(*to, *armies as i16)?;
 
                 let next_player = self.current_player.next();
                 let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
@@ -134,9 +134,9 @@ impl GameState {
                 let mut new_state = self.clone();
                 if conquer {
                     new_state.conquer(*to, *attacking)?;
-                    new_state.add_armies(*from, -(*attacking as i16), true)?;
+                    new_state.add_armies(*from, -(*attacking as i16))?;
                 } else {
-                    new_state.add_armies(*from, -(*attacking as i16), true)?;
+                    new_state.add_armies(*from, -(*attacking as i16))?;
                 }
 
                 Ok(GameStateResults::single(new_state))
@@ -153,10 +153,13 @@ impl GameState {
         &self.territories[territory as usize]
     }
 
-    fn add_armies(&mut self, territory: Territory, armies: i16, is_starting: bool) -> Result<(), MoveApplyErr> {
+    fn add_armies(&mut self, territory: Territory, armies: i16) -> Result<(), MoveApplyErr> {
         let index = territory as usize;
         if self.territories[index].player != self.current_player {
-            return Err(if is_starting { MoveApplyErr::FromTerritoryNotOwned } else { MoveApplyErr::ToTerritoryNotOwned });
+            return Err(if armies < 0 { MoveApplyErr::FromTerritoryNotOwned } else { MoveApplyErr::ToTerritoryNotOwned });
+        }
+        if armies == 0 {
+            return Ok(())
         }
         let new_armies = self.territories[index].armies as i16 + armies;
         if new_armies <= 0 {
