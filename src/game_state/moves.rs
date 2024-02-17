@@ -1,7 +1,16 @@
 use strum::IntoEnumIterator;
 
+use itertools::Itertools;
+use counter::Counter;
+
 use super::{move_results::GameStateResults, GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
+
+#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+struct AttackScenario {
+    attacker_losses: u8,
+    defender_losses: u8,
+}
 
 impl GameState {
     fn continent_bonus(continent: Continent) -> u8 {
@@ -146,26 +155,44 @@ impl GameState {
 
                 let mut new_states = GameStateResults::new();
 
-                let attacking_territory = self.territory_state(*from);
+                let attacking_dice = std::cmp::min(*attacking, 3);
                 let defending_territory = self.territory_state(*to);
-                let conquer = attacking_territory.armies > defending_territory.armies;
-                let mut new_state = self.clone();
-                if conquer {
-                    new_state.conquer(*to, *attacking)?;
-                    new_state.add_armies(*from, -(*attacking as i16))?;
-                } else {
-                    new_state.add_armies(*from, -(*attacking as i16))?;
+                let defending_dice = std::cmp::min(defending_territory.armies, 2);
+
+                // Simulate every die roll, although the order does not matter
+                let attacker_combinations = (1..=6).combinations_with_replacement(attacking_dice as usize);
+                let defender_combinations = (1..=6).combinations_with_replacement(defending_dice as usize).collect::<Vec<_>>();
+
+                let mut scenarios: Counter<AttackScenario> = Counter::new();
+                for attacker_combination in attacker_combinations {
+                    for defender_combination in &defender_combinations {
+                        let scenario = Self::compare_rolls(&attacker_combination, defender_combination);
+                        scenarios[&scenario] += 1;
+                    }
                 }
 
-                new_states.push(new_state, 1);
+                for (scenario, count) in scenarios {
+                    let mut new_state = self.clone();
+                    new_state.add_armies(*from, -(scenario.attacker_losses as i16))?;
+                    new_state.check_capture(*to, *attacking, scenario.defender_losses)?;
+                    new_states.push(new_state, count);
+                }
+
                 Ok(new_states)
             },
         }
     }
 
-    fn apply_move_hack(&self) -> GameState {
-        // todo!("applying this move is not yet implemented");
-        self.clone()
+    fn compare_rolls(attacker_roll: &[u8], defender_roll: &[u8]) -> AttackScenario {
+        let mut result = AttackScenario { attacker_losses: 0, defender_losses: 0 };
+        for (a, d) in attacker_roll.iter().sorted().zip(defender_roll.iter().sorted()) {
+            if a > d {
+                result.defender_losses += 1;
+            } else {
+                result.attacker_losses += 1;
+            }
+        }
+        result
     }
 
     pub fn territory_state(&self, territory: Territory) -> &TerritoryState {
@@ -188,13 +215,22 @@ impl GameState {
         Ok(())
     }
 
-    fn conquer(&mut self, territory: Territory, armies: u8) -> Result<(), MoveApplyErr> {
+    fn check_capture(&mut self, territory: Territory, attacking: u8, defender_losses: u8) -> Result<(), MoveApplyErr> {
         let index = territory as usize;
         if self.territories[index].player == self.current_player {
             return Err(MoveApplyErr::ToTerritoryOwned);
         }
-        self.territories[index].player = self.current_player;
-        self.territories[index].armies = armies;
+        if defender_losses > 0 {
+            if self.territories[index].armies < defender_losses {
+                return Err(MoveApplyErr::TooManyUnitsDefended);
+            }
+            if self.territories[index].armies > defender_losses {
+                self.territories[index].armies -= defender_losses;
+            } else {
+                self.territories[index].player = self.current_player;
+                self.territories[index].armies = attacking;
+            }
+        }
         Ok(())
     }
 
@@ -274,6 +310,7 @@ mod tests {
         let start = dummy_state(GamePhase::Attack);
         let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
         let result = result.unwrap();
+        assert_eq!(result.results().len(), 2);
         for state_result in result.results() {
             assert!(state_result.count() > 0);
             let state = state_result.state();
