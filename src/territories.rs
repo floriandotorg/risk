@@ -3,6 +3,7 @@ use strum_macros::{EnumCount, EnumIter};
 
 #[repr(u8)]
 #[derive(PartialEq, Eq, Clone, Copy, Debug, EnumCount, TryFromPrimitive)]
+#[cfg_attr(test, derive(EnumIter))]
 pub enum Territory {
     Alaska = 00,
     NorthwestTerritory = 01,
@@ -297,3 +298,37 @@ impl std::fmt::Display for Territory {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use strum::IntoEnumIterator;
+
+    use crate::territories::NEIGHBORS;
+
+    use super::Territory;
+
+    #[test]
+    fn has_neighbors() {
+        // Check if there are any territories without a neighbor
+        for name in Territory::iter() {
+            let mut found = false;
+            for (s, e) in NEIGHBORS.iter() {
+                if *s == name || *e == name {
+                    found = true;
+                    break;
+                }
+            }
+            assert!(found, "Territory {} had no neighbor", name);
+        }
+    }
+
+    #[test]
+    fn check_neighbors() {
+        // Check if there are any connections which are in both directions
+        for (idx, (s, e)) in NEIGHBORS[..NEIGHBORS.len() - 1].iter().enumerate() {
+            for (idx2, (s2, e2)) in NEIGHBORS[(idx + 1)..].iter().enumerate() {
+                let is_equal = (*s2 == *s && *e2 == *e) || (*s2 == *e && *e2 == *s);
+                assert!(!is_equal, "Connection between s={} and e={} (s2={}, e2={}) exists at least twice (idx {} and {})", s, e, s2, e2, idx, idx + idx2 + 1);
+            }
+        }
+    }
+}
