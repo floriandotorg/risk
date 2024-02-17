@@ -27,7 +27,9 @@ impl GameState {
             GamePhase::Reinforce(number_of_reinforcements) => {
                 for armies in 1..=number_of_reinforcements {
                     for t in &territories {
-                        moves.push(Move::Reinforce { territory: t.territory, armies });
+                        if t.state.armies as u16 + armies as u16 <= u8::MAX as u16 {
+                            moves.push(Move::Reinforce { territory: t.territory, armies });
+                        }
                     }
                 }
             }
@@ -42,7 +44,9 @@ impl GameState {
 
                         for armies in 1..territory.state.armies {
                             if neighbor_territory.player == self.current_player {
-                                moves.push(Move::Fortify { from: territory.territory, to: neighbor, armies })
+                                    if neighbor_territory.armies as u16 + armies as u16 <= u8::MAX as u16 {
+                                    moves.push(Move::Fortify { from: territory.territory, to: neighbor, armies })
+                                }
                             } else if self.phase == GamePhase::Attack && armies <= 3 {
                                 for defending in 1..=std::cmp::min(neighbor_territory.armies, 2) {
                                     moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking: armies, defending })
