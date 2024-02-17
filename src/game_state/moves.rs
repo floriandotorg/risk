@@ -159,9 +159,9 @@ impl GameState {
                 let defending_territory = self.territory_state(*to);
                 let defending_dice = std::cmp::min(defending_territory.armies, 2);
 
-                // Simulate every die roll, although the order does not matter
-                let attacker_combinations = (1..=6).combinations_with_replacement(attacking_dice as usize);
-                let defender_combinations = (1..=6).combinations_with_replacement(defending_dice as usize).collect::<Vec<_>>();
+                // Simulate every die roll, where each combination is sorted "largest first", as compare_rolls expects
+                let attacker_combinations = (1..=6).combinations_with_replacement(attacking_dice as usize).map(Self::sort_descending);
+                let defender_combinations = (1..=6).combinations_with_replacement(defending_dice as usize).map(Self::sort_descending).collect::<Vec<_>>();
 
                 let mut scenarios: Counter<AttackScenario> = Counter::new();
                 for attacker_combination in attacker_combinations {
@@ -183,9 +183,17 @@ impl GameState {
         }
     }
 
+    fn sort_descending(dice: Vec<u8>) -> Vec<u8> {
+        let mut dice = dice;
+        dice.sort();
+        dice.reverse();
+        dice
+    }
+
     fn compare_rolls(attacker_roll: &[u8], defender_roll: &[u8]) -> AttackScenario {
         let mut result = AttackScenario { attacker_losses: 0, defender_losses: 0 };
-        for (a, d) in attacker_roll.iter().sorted().zip(defender_roll.iter().sorted()) {
+        // Compares the rolls AS seen, there is no ordering here!
+        for (a, d) in attacker_roll.iter().zip(defender_roll) {
             if a > d {
                 result.defender_losses += 1;
             } else {
@@ -281,6 +289,8 @@ mod tests {
 
     const TARGET_TERRITORY: Territory = Territory::Alaska;
     const SOURCE_TERRITORY: Territory = Territory::NorthwestTerritory;
+    const SOURCE_TERRITORY_ARMIES: u8 = 10;
+    const TARGET_TERRITORY_ARMIES: u8 = 3;
 
     fn dummy_state(phase: GamePhase) -> GameState {
         let mut state = GameState {
@@ -289,7 +299,9 @@ mod tests {
             phase,
         };
         state.territory_mut(TARGET_TERRITORY).player = Player::B;
-        state.territory_mut(SOURCE_TERRITORY).armies = 10;
+        state.territory_mut(TARGET_TERRITORY).armies = TARGET_TERRITORY_ARMIES;
+
+        state.territory_mut(SOURCE_TERRITORY).armies = SOURCE_TERRITORY_ARMIES;
         state
     }
 
@@ -316,6 +328,38 @@ mod tests {
             let state = state_result.state();
             assert_eq!(state.current_player, Player::A);
             assert_eq!(state.phase, GamePhase::Attack);
+
+            let source_territory_state = state.territory_state(SOURCE_TERRITORY);
+            assert_eq!(source_territory_state.player, Player::A);
+
+            let target_territory_state = state.territory_state(TARGET_TERRITORY);
+            assert_eq!(target_territory_state.player, Player::B);
+
+            if source_territory_state.armies == SOURCE_TERRITORY_ARMIES - 1 {
+                assert!(target_territory_state.armies == TARGET_TERRITORY_ARMIES);
+            } else {
+                assert!(target_territory_state.armies == TARGET_TERRITORY_ARMIES - 1);
+                assert_eq!(source_territory_state.armies, SOURCE_TERRITORY_ARMIES);
+            }
         }
+    }
+
+    #[test]
+    fn compare_dice_rolls() {
+        let scenario = GameState::compare_rolls(&[1], &[6]);
+        assert_eq!(scenario.attacker_losses, 1);
+        assert_eq!(scenario.defender_losses, 0);
+
+        let scenario = GameState::compare_rolls(&[6], &[6]);
+        assert_eq!(scenario.attacker_losses, 1);
+        assert_eq!(scenario.defender_losses, 0);
+
+        let scenario = GameState::compare_rolls(&[6], &[1]);
+        assert_eq!(scenario.attacker_losses, 0);
+        assert_eq!(scenario.defender_losses, 1);
+
+        let scenario = GameState::compare_rolls(&[6, 2], &[3]);
+        assert_eq!(scenario.attacker_losses, 0);
+        assert_eq!(scenario.defender_losses, 1);
     }
 }
