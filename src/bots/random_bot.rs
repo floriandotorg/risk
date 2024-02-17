@@ -12,3 +12,9 @@ impl Bot for RandomBot {
         moves[rng.gen_range(0..moves.len())]
     }
 }
+
+impl Default for RandomBot {
+    fn default() -> Self {
+        Self
+    }
+}
