@@ -108,7 +108,20 @@ impl GameState {
                 new_state.add_armies(*territory, number_of_reinforcements as i16, true)?;
                 Ok(new_state)
             },
-            _ => {
+            Move::Fortify { from, to, armies } => {
+                let mut new_state = self.clone();
+                new_state.add_armies(*from, -(*armies as i16), true)?;
+                new_state.add_armies(*to, *armies as i16, false)?;
+
+                let next_player = self.current_player.next();
+                let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
+                Ok(GameState {
+                    current_player: self.current_player,
+                    territories: self.territories,
+                    phase: GamePhase::Reinforce(number_of_reinforcements)
+                })
+            },
+            Move::Attack { from, to, attacking, defending } => {
                 if !self.legal_moves().contains(move_to_play) {
                     return Err(MoveApplyErr::IllegalMove);
                 }
