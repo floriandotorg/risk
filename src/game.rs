@@ -82,14 +82,17 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         let bot: &dyn Bot = if player == Player::A { &self.bot_a } else { &self.bot_b };
         while self.game_state.current_player() == player && !self.game_state.is_finished() {
             let move_to_play = bot.make_move(self.game_state.clone());
-            if options.debug_output {
-                println!("  {:?}", move_to_play);
-            }
-            self.game_state = *self.game_state.apply_move(&move_to_play).unwrap().results().first().unwrap().state();
             moves_played.push(move_to_play);
+
             if moves_played.len() > 200 {
                 return Err(MoveApplyErr::TooManyMoves);
             }
+
+            if options.debug_output {
+                println!("  {:?}", move_to_play);
+            }
+
+            self.game_state = self.game_state.apply_move(&move_to_play).unwrap().random_state_by_probability();
         }
 
         self.round += 1;
