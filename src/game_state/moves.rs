@@ -4,8 +4,9 @@ use super::{GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, Terri
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
-    pub fn number_of_reinforcements(territories: usize) -> u8 {
-        match territories {
+    pub fn number_of_reinforcements(territories: &[TerritoryState], player: Player) -> u8 {
+        let territories_of_player = territories.iter().filter(|territory| territory.player == player).count();
+        match territories_of_player {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
             0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
             14 | 15 | 16 => 4,
@@ -72,10 +73,31 @@ impl GameState {
     }
 
     pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, MoveApplyErr> {
-        if !self.legal_moves().contains(move_to_play) {
-            return Err(MoveApplyErr::IllegalMove);
+        match move_to_play {
+            Move::Pass => {
+                let (next_phase, next_player) = match self.phase {
+                    GamePhase::Reinforce(armies) => return Err(MoveApplyErr::MoveNotInPhase(Move::Pass, GamePhase::Reinforce(armies))),
+                    GamePhase::Attack => (GamePhase::Fortify, self.current_player),
+                    GamePhase::Fortify => {
+                        let next_player = self.current_player.next();
+                        let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
+                        (GamePhase::Reinforce(number_of_reinforcements), next_player)
+                    },
+                };
+                Ok(GameState {
+                    current_player: next_player,
+                    territories: self.territories,
+                    phase: next_phase
+                })
+            },
+            _ => {
+                if !self.legal_moves().contains(move_to_play) {
+                    return Err(MoveApplyErr::IllegalMove);
+                }
+
+                Ok(self.apply_move_hack())
+            },
         }
-        Ok(self.apply_move_hack())
     }
 
     fn apply_move_hack(&self) -> GameState {

@@ -18,8 +18,7 @@ impl GameStateDuringInitialPlacement {
     pub fn start(&self) -> GameState {
         let territories = self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), armies: t.armies}).collect::<Vec<_>>();
         let current_player = Self::STARTING_PLAYER;
-        let territories_of_starting_player = territories.iter().filter(|territory| territory.player == current_player).count();
-        let number_of_reinforcements = GameState::number_of_reinforcements(territories_of_starting_player);
+        let number_of_reinforcements = GameState::number_of_reinforcements(&territories, current_player);
         GameState {
             current_player,
             territories: territories.try_into().unwrap(),

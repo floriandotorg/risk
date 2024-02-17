@@ -25,7 +25,7 @@ struct NamedTerritoryState<'a> {
     state: &'a TerritoryState,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum GamePhase {
     Reinforce(u8),
     Attack,
@@ -49,6 +49,7 @@ pub enum Move {
 
 #[derive(Debug)]
 pub enum MoveApplyErr {
+    MoveNotInPhase(Move, GamePhase),
     TooManyMoves,
     IllegalMove,
 }
