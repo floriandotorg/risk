@@ -144,7 +144,12 @@ impl GameState {
         }
     }
 
-    fn territory(&self, territory: Territory) -> &TerritoryState {
+    fn apply_move_hack(&self) -> GameState {
+        // todo!("applying this move is not yet implemented");
+        self.clone()
+    }
+
+    pub fn territory(&self, territory: Territory) -> &TerritoryState {
         &self.territories[territory as usize]
     }
 
@@ -175,7 +180,7 @@ impl GameState {
         self.territories.iter().enumerate().map(|(i, t)| NamedTerritoryState { territory: Territory::try_from(i as u8).unwrap(), state: t })
     }
 
-    fn territories_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
+    pub fn territories_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
         self.territories_iter().filter_map(|territory| if territory.state.player == player { Some(territory) } else { None }).collect()
     }
 
@@ -197,5 +202,9 @@ impl GameState {
 
     pub fn current_player(&self) -> Player {
         self.current_player
+    }
+
+    pub fn phase(&self) -> GamePhase {
+        self.phase
     }
 }

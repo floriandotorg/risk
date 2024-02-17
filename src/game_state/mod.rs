@@ -15,18 +15,38 @@ pub struct GameStateDuringInitialPlacement {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct TerritoryState {
+pub struct TerritoryState {
     player: Player,
     armies: u8,
 }
 
-struct NamedTerritoryState<'a> {
+impl TerritoryState {
+    pub fn player(&self) -> Player {
+        self.player
+    }
+
+    pub fn armies(&self) -> u8 {
+        self.armies
+    }
+}
+
+pub struct NamedTerritoryState<'a> {
     territory: Territory,
     state: &'a TerritoryState,
 }
 
+impl NamedTerritoryState<'_> {
+    pub fn territory(&self) -> Territory {
+        self.territory
+    }
+
+    pub fn state(&self) -> &TerritoryState {
+        self.state
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum GamePhase {
+pub enum GamePhase {
     Reinforce(u8),
     Attack,
     Fortify,
