@@ -179,8 +179,13 @@ impl GameState {
 
                 for (scenario, count) in scenarios {
                     let mut new_state = self.clone();
-                    new_state.add_armies(*from, -(scenario.attacker_losses as i16))?;
-                    new_state.check_capture(*to, *attacking, scenario.defender_losses)?;
+                    let attacker_move;
+                    if new_state.check_capture(*to, *attacking, scenario.defender_losses)? {
+                        attacker_move = *attacking;
+                    } else {
+                        attacker_move = scenario.attacker_losses;
+                    }
+                    new_state.add_armies(*from, -(attacker_move as i16))?;
                     new_states.push(new_state, count);
                 }
 
@@ -229,23 +234,23 @@ impl GameState {
         Ok(())
     }
 
-    fn check_capture(&mut self, territory: Territory, attacking: u8, defender_losses: u8) -> Result<(), MoveApplyErr> {
+    fn check_capture(&mut self, territory: Territory, attacking: u8, defender_losses: u8) -> Result<bool, MoveApplyErr> {
         let index = territory as usize;
         if self.territories[index].player == self.current_player {
             return Err(MoveApplyErr::ToTerritoryOwned);
         }
-        if defender_losses > 0 {
-            if self.territories[index].armies < defender_losses {
-                return Err(MoveApplyErr::TooManyUnitsDefended);
-            }
-            if self.territories[index].armies > defender_losses {
-                self.territories[index].armies -= defender_losses;
-            } else {
-                self.territories[index].player = self.current_player;
-                self.territories[index].armies = attacking;
-            }
+        if defender_losses == 0 {
+            Ok(false)
+        } else if self.territories[index].armies < defender_losses {
+            Err(MoveApplyErr::TooManyUnitsDefended)
+        } else if self.territories[index].armies > defender_losses {
+            self.territories[index].armies -= defender_losses;
+            Ok(false)
+        } else {
+            self.territories[index].player = self.current_player;
+            self.territories[index].armies = attacking;
+            Ok(true)
         }
-        Ok(())
     }
 
     pub fn territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
@@ -298,14 +303,14 @@ mod tests {
     const SOURCE_TERRITORY_ARMIES: u8 = 10;
     const TARGET_TERRITORY_ARMIES: u8 = 3;
 
-    fn dummy_state(phase: GamePhase) -> GameState {
+    fn dummy_state(phase: GamePhase, target_armies: u8) -> GameState {
         let mut state = GameState {
             current_player: Player::A,
             territories: [TerritoryState {player: Player::A, armies: 1}; Territory::COUNT],
             phase,
         };
         state.territory_mut(TARGET_TERRITORY).player = Player::B;
-        state.territory_mut(TARGET_TERRITORY).armies = TARGET_TERRITORY_ARMIES;
+        state.territory_mut(TARGET_TERRITORY).armies = target_armies;
 
         state.territory_mut(SOURCE_TERRITORY).armies = SOURCE_TERRITORY_ARMIES;
         state
@@ -313,7 +318,7 @@ mod tests {
 
     #[test]
     fn attack_pass_skips() {
-        let start = dummy_state(GamePhase::Attack);
+        let start = dummy_state(GamePhase::Attack, TARGET_TERRITORY_ARMIES);
         let result = start.apply_move(&Move::Pass);
         let result = result.unwrap();
         assert_eq!(result.states_with_count().len(), 1);
@@ -325,7 +330,7 @@ mod tests {
 
     #[test]
     fn attack_other_player() {
-        let start = dummy_state(GamePhase::Attack);
+        let start = dummy_state(GamePhase::Attack, TARGET_TERRITORY_ARMIES);
         let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
         let result = result.unwrap();
         assert_eq!(result.states_with_count().len(), 2);
@@ -347,6 +352,28 @@ mod tests {
                 assert!(target_territory_state.armies == TARGET_TERRITORY_ARMIES - 1);
                 assert_eq!(source_territory_state.armies, SOURCE_TERRITORY_ARMIES);
             }
+        }
+    }
+
+    #[test]
+    fn attack_and_capture() {
+        let start = dummy_state(GamePhase::Attack, 1);
+        let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
+        let result = result.unwrap();
+        assert_eq!(result.states_with_count().len(), 2);
+        for state_result in result.states_with_count() {
+            assert!(state_result.count() > 0);
+            let state = state_result.state();
+            assert_eq!(state.current_player, Player::A);
+            assert_eq!(state.phase, GamePhase::Attack);
+
+            let source_territory_state = state.territory_state(SOURCE_TERRITORY);
+            assert_eq!(source_territory_state.armies, SOURCE_TERRITORY_ARMIES - 1);
+            assert_eq!(source_territory_state.player, Player::A);
+
+            let target_territory_state = state.territory_state(TARGET_TERRITORY);
+            assert_eq!(target_territory_state.armies, 1);
+            assert!(target_territory_state.player == Player::A || target_territory_state.player == Player::B);
         }
     }
 
