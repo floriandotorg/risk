@@ -39,7 +39,7 @@ pub struct GameState {
     phase: GamePhase,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum Move {
     Pass,
     Reinforce { territory: Territory, armies: u8 },

@@ -80,4 +80,13 @@ impl GameState {
         }
         result
     }
+
+    pub fn is_finished(&self) -> bool {
+        let player = self.territories.first().unwrap().player;
+        self.territories.iter().all(|t| t.player == player)
+    }
+
+    pub fn current_player(&self) -> Player {
+        self.current_player
+    }
 }

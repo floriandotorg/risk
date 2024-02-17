@@ -3,11 +3,11 @@ extern crate image;
 mod territories;
 mod player;
 mod game_state;
-
-use game_state::GameStateDuringInitialPlacement;
+mod bots;
+mod game;
+mod arena;
 
 fn main() {
-    let state = GameStateDuringInitialPlacement::new().place_random().start();
-    println!("{:?}", state.legal_moves());
-    state.save_map().expect("Failed to draw map");
+    let mut game = game::Game::new(bots::random_bot::RandomBot {}, bots::random_bot::RandomBot {});
+    println!("{:?}", game.play_until_end().unwrap());
 }
