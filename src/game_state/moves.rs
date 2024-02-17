@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use super::{GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
+use super::{move_results::GameStateResults, GamePhase, GameState, Move, MoveApplyErr, NamedTerritoryState, TerritoryState};
 use crate::{player::Player, territories::{Continent, Territory}};
 
 impl GameState {
@@ -58,7 +58,7 @@ impl GameState {
         moves
     }
 
-    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameState, MoveApplyErr> {
+    pub fn apply_move(&self, move_to_play: &Move) -> Result<GameStateResults, MoveApplyErr> {
         if self.is_finished() {
             return Err(MoveApplyErr::GameFinished);
         }
@@ -74,11 +74,11 @@ impl GameState {
                         (GamePhase::Reinforce(number_of_reinforcements), next_player)
                     },
                 };
-                Ok(GameState {
+                Ok(GameStateResults::single(GameState {
                     current_player: next_player,
                     territories: self.territories,
                     phase: next_phase
-                })
+                }))
             },
             Move::Reinforce { territory, armies } => {
                 let number_of_reinforcements = match self.phase {
@@ -101,7 +101,7 @@ impl GameState {
                     phase: next_phase
                 };
                 new_state.add_armies(*territory, number_of_reinforcements as i16, true)?;
-                Ok(new_state)
+                Ok(GameStateResults::single(new_state))
             },
             Move::Fortify { from, to, armies } => {
                 if self.phase != GamePhase::Fortify && self.phase != GamePhase::Attack {
@@ -114,11 +114,11 @@ impl GameState {
 
                 let next_player = self.current_player.next();
                 let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
-                Ok(GameState {
+                Ok(GameStateResults::single(GameState {
                     current_player: next_player,
                     territories: new_state.territories,
                     phase: GamePhase::Reinforce(number_of_reinforcements)
-                })
+                }))
             },
             Move::Attack { from, to, attacking, defending } => {
                 if self.phase != GamePhase::Attack {
@@ -136,7 +136,7 @@ impl GameState {
                     new_state.add_armies(*from, -(*attacking as i16), true)?;
                 }
 
-                Ok(new_state)
+                Ok(GameStateResults::single(new_state))
             },
         }
     }
