@@ -56,7 +56,6 @@ pub enum MoveApplyErr {
     FromTerritoryNotOwned,
     ToTerritoryNotOwned,
     ToTerritoryOwned,
-    IllegalMove,
     GameFinished
 }
 

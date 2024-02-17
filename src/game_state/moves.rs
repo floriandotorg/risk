@@ -122,6 +122,10 @@ impl GameState {
                 Ok(new_state)
             },
             Move::Fortify { from, to, armies } => {
+                if self.phase != GamePhase::Fortify {
+                    return Err(MoveApplyErr::MoveNotInPhase(*move_to_play, self.phase))
+                }
+
                 let mut new_state = self.clone();
                 new_state.add_armies(*from, -(*armies as i16), true)?;
                 new_state.add_armies(*to, *armies as i16, false)?;
@@ -135,8 +139,8 @@ impl GameState {
                 })
             },
             Move::Attack { from, to, attacking, defending } => {
-                if !self.legal_moves().contains(move_to_play) {
-                    return Err(MoveApplyErr::IllegalMove);
+                if self.phase != GamePhase::Attack {
+                    return Err(MoveApplyErr::MoveNotInPhase(*move_to_play, self.phase))
                 }
 
                 let attacking_territory = self.territory(*from);
