@@ -212,3 +212,55 @@ impl GameState {
         self.phase
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use strum::EnumCount;
+
+    use crate::{game_state::{GamePhase, GameState, Move, TerritoryState}, player::Player, territories::Territory};
+
+    impl GameState {
+        fn territory_mut(&mut self, territory: Territory) -> &mut TerritoryState {
+            &mut self.territories[territory as usize]
+        }
+    }
+
+    const TARGET_TERRITORY: Territory = Territory::Alaska;
+    const SOURCE_TERRITORY: Territory = Territory::NorthwestTerritory;
+
+    fn dummy_state(phase: GamePhase) -> GameState {
+        let mut state = GameState {
+            current_player: Player::A,
+            territories: [TerritoryState {player: Player::A, armies: 1}; Territory::COUNT],
+            phase,
+        };
+        state.territory_mut(TARGET_TERRITORY).player = Player::B;
+        state.territory_mut(SOURCE_TERRITORY).armies = 10;
+        state
+    }
+
+    #[test]
+    fn attack_pass_skips() {
+        let start = dummy_state(GamePhase::Attack);
+        let result = start.apply_move(&Move::Pass);
+        let result = result.unwrap();
+        assert_eq!(result.results().len(), 1);
+        let result = &result.results()[0];
+        assert_eq!(result.count(), 1);
+        assert_eq!(result.state().current_player, Player::B);
+        assert!(matches!(result.state().phase, GamePhase::Reinforce(..)));
+    }
+
+    #[test]
+    fn attack_other_player() {
+        let start = dummy_state(GamePhase::Attack);
+        let result = start.apply_move(&Move::Attack { from: SOURCE_TERRITORY, to: TARGET_TERRITORY, attacking: 1 });
+        let result = result.unwrap();
+        for state_result in result.results() {
+            assert!(state_result.count() > 0);
+            let state = state_result.state();
+            assert_eq!(state.current_player, Player::A);
+            assert_eq!(state.phase, GamePhase::Attack);
+        }
+    }
+}
