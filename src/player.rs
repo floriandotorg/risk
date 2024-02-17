@@ -7,8 +7,6 @@ pub enum Player {
 }
 
 impl Player {
-    pub const COUNT: usize = 2;
-
     pub fn next(self) -> Self {
         match self {
             Player::A => Player::B,
