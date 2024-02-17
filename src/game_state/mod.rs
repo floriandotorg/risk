@@ -52,6 +52,7 @@ pub enum MoveApplyErr {
     MoveNotInPhase(Move, GamePhase),
     TooManyReinforcements,
     TooManyMoves,
+    TooManyUnitsMoved,
     FromTerritoryNotOwned,
     ToTerritoryNotOwned,
     ToTerritoryOwned,

@@ -116,8 +116,8 @@ impl GameState {
                 let next_player = self.current_player.next();
                 let number_of_reinforcements = GameState::number_of_reinforcements(&self.territories, next_player);
                 Ok(GameState {
-                    current_player: self.current_player,
-                    territories: self.territories,
+                    current_player: next_player,
+                    territories: new_state.territories,
                     phase: GamePhase::Reinforce(number_of_reinforcements)
                 })
             },
@@ -151,7 +151,11 @@ impl GameState {
         if self.territories[index].player != self.current_player {
             return Err(if is_starting { MoveApplyErr::FromTerritoryNotOwned } else { MoveApplyErr::ToTerritoryNotOwned });
         }
-        self.territories[index].armies = (self.territories[index].armies as i16 + armies) as u8;
+        let new_armies = self.territories[index].armies as i16 + armies;
+        if new_armies <= 0 {
+            return Err(MoveApplyErr::TooManyUnitsMoved);
+        }
+        self.territories[index].armies = new_armies as u8;
         Ok(())
     }
 
