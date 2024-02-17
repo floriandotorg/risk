@@ -11,12 +11,12 @@ impl GameStateDuringInitialPlacement {
     pub fn new() -> Self {
         Self {
             current_player: Self::STARTING_PLAYER,
-            territories: vec![TerritoryStateDuringInitialPlacement { player: None, troops: 0 }; Territory::COUNT].try_into().unwrap()
+            territories: vec![TerritoryStateDuringInitialPlacement { player: None, armies: 0 }; Territory::COUNT].try_into().unwrap()
         }
     }
 
     pub fn start(&self) -> GameState {
-        let territories = self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), troops: t.troops}).collect::<Vec<_>>();
+        let territories = self.territories.iter().map(|t| TerritoryState { player: t.player.unwrap(), armies: t.armies}).collect::<Vec<_>>();
         let current_player = Self::STARTING_PLAYER;
         let territories_of_starting_player = territories.iter().filter(|territory| territory.player == current_player).count();
         let number_of_reinforcements = GameState::number_of_reinforcements(territories_of_starting_player);
@@ -32,7 +32,7 @@ impl GameStateDuringInitialPlacement {
         let mut active_player = self.current_player;
         let mut rng = rand::thread_rng();
 
-        let mut troops = [0; Player::COUNT];
+        let mut armies = [0; Player::COUNT];
         let mut territories_per_player = [0; Player::COUNT];
 
         // Place all players
@@ -48,9 +48,9 @@ impl GameStateDuringInitialPlacement {
                 if t.player.is_none() {
                     if random_territory == 0 {
                         t.player = Some(active_player);
-                        t.troops = 1;
+                        t.armies = 1;
 
-                        troops[active_player as usize] += 1;
+                        armies[active_player as usize] += 1;
                         territories_per_player[active_player as usize] += 1;
                         break;
                     }
@@ -61,21 +61,21 @@ impl GameStateDuringInitialPlacement {
             active_player = active_player.next();
         }
 
-        // Place remaining troops
-        const TROOP_COUNT: usize = 40;
+        // Place remaining armies
+        const ARMIES_COUNT: usize = 40;
 
         for player in Player::iter() {
-            let mut remaining_troops = TROOP_COUNT - troops[player as usize];
+            let mut remaining_armies = ARMIES_COUNT - armies[player as usize];
             let players_territories = territories_per_player[player as usize];
 
-            while remaining_troops > 0 {
+            while remaining_armies > 0 {
                 let mut random_territory = rng.gen_range(0..players_territories);
 
                 for t in territories.iter_mut() {
                     if t.player == Some(player) {
                         if random_territory == 0 {
-                            t.troops += 1;
-                            remaining_troops -= 1;
+                            t.armies += 1;
+                            remaining_armies -= 1;
                             break;
                         }
 

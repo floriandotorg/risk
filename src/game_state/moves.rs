@@ -28,7 +28,7 @@ impl GameState {
 
         if self.phase == GamePhase::Attack {
             for territory in &territories {
-                if territory.state.troops < 2 {
+                if territory.state.armies < 2 {
                     continue;
                 }
 
@@ -38,8 +38,8 @@ impl GameState {
                         continue;
                     }
 
-                    for attacking in 1..territory.state.troops {
-                        for defending in 1..neighbor_territory.troops {
+                    for attacking in 1..territory.state.armies {
+                        for defending in 1..neighbor_territory.armies {
                             moves.push(Move::Attack { from: territory.territory, to: neighbor, attacking, defending })
                         }
                     }

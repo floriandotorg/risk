@@ -6,7 +6,7 @@ use crate::territories::Territory;
 #[derive(Debug, Clone)]
 struct TerritoryStateDuringInitialPlacement {
     player: Option<Player>,
-    troops: u8,
+    armies: u8,
 }
 
 pub struct GameStateDuringInitialPlacement {
@@ -17,7 +17,7 @@ pub struct GameStateDuringInitialPlacement {
 #[derive(Debug, Copy, Clone)]
 struct TerritoryState {
     player: Player,
-    troops: u8,
+    armies: u8,
 }
 
 struct NamedTerritoryState<'a> {

@@ -82,11 +82,11 @@ impl GameState {
                 cr.fill()?;
 
                 cr.set_source_rgb(1.0, 1.0, 1.0);
-                let troop_text = format!("{}", t.troops);
+                let army_text = format!("{}", t.armies);
 
-                let text_size = cr.text_extents(&troop_text)?;
+                let text_size = cr.text_extents(&army_text)?;
                 cr.move_to(*x - text_size.width() / 2.0, *y + text_size.height() / 2.0);
-                cr.show_text(&troop_text)?;
+                cr.show_text(&army_text)?;
             }
         }
 

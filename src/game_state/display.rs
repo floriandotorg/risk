@@ -6,7 +6,7 @@ impl Display for GameState {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "Current player: {:?}", self.current_player)?;
         for NamedTerritoryState { territory, state } in self.territories_iter() {
-            writeln!(f, "{:24} - {:?} {}", territory, state.player, state.troops)?;
+            writeln!(f, "{:24} - {:?} {}", territory, state.player, state.armies)?;
         }
         Ok(())
     }
