@@ -54,6 +54,7 @@ pub enum MoveApplyErr {
     TooManyMoves,
     FromTerritoryNotOwned,
     ToTerritoryNotOwned,
+    ToTerritoryOwned,
     IllegalMove,
 }
 

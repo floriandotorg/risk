@@ -126,14 +126,20 @@ impl GameState {
                     return Err(MoveApplyErr::IllegalMove);
                 }
 
-                Ok(self.apply_move_hack())
+                let attacking_territory = self.territory(*from);
+                let defending_territory = self.territory(*to);
+                let conquer = attacking_territory.armies > defending_territory.armies;
+                let mut new_state = self.clone();
+                if conquer {
+                    new_state.conquer(*to, *attacking)?;
+                    new_state.add_armies(*from, -(*attacking as i16), true)?;
+                } else {
+                    new_state.add_armies(*from, -(*attacking as i16), true)?;
+                }
+
+                Ok(new_state)
             },
         }
-    }
-
-    fn apply_move_hack(&self) -> GameState {
-        // todo!("applying this move is not yet implemented");
-        self.clone()
     }
 
     fn territory(&self, territory: Territory) -> &TerritoryState {
@@ -146,6 +152,16 @@ impl GameState {
             return Err(if is_starting { MoveApplyErr::FromTerritoryNotOwned } else { MoveApplyErr::ToTerritoryNotOwned });
         }
         self.territories[index].armies = (self.territories[index].armies as i16 + armies) as u8;
+        Ok(())
+    }
+
+    fn conquer(&mut self, territory: Territory, armies: u8) -> Result<(), MoveApplyErr> {
+        let index = territory as usize;
+        if self.territories[index].player == self.current_player {
+            return Err(MoveApplyErr::ToTerritoryOwned);
+        }
+        self.territories[index].player = self.current_player;
+        self.territories[index].armies = armies;
         Ok(())
     }
 
