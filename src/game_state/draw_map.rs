@@ -1,9 +1,10 @@
-use std::fs::File;
+use std::{fs::File, result};
 use std::io::BufReader;
 use strum::EnumCount;
 use viuer::{Config, print, };
 use cairo;
 use image::{DynamicImage, ImageBuffer};
+use once_cell::sync::Lazy;
 
 use crate::territories::Territory;
 
@@ -56,20 +57,51 @@ const TERRITORY_MAP_COORDS: &[(f64, f64); Territory::COUNT] = &[
     (740.0, 175.0), // Japan
 ];
 
+pub struct DrawMapOptions {
+    filename: String,
+    should_print: bool,
+}
+
+impl Default for DrawMapOptions {
+    fn default() -> Self {
+        Self {
+            filename: "output-map.png".to_string(),
+            should_print: false,
+        }
+    }
+}
+
+impl DrawMapOptions {
+    pub fn filename(mut self, filename: &str) -> Self {
+        self.filename = filename.to_string();
+        self
+    }
+
+    pub fn should_print(mut self) -> Self {
+        self.should_print = true;
+        self
+    }
+}
+
+use std::panic;
+
 impl GameState {
-    pub fn draw_map_with_filename(&self, filename: &str, should_print: bool) -> Result<(), cairo::Error> {
-        let width: u32 = 800;
-        let height: u32 = 533;
+    pub fn draw_map(&self, options: DrawMapOptions) -> Result<(), cairo::Error> {
+        const WIDTH: u32 = 800;
+        const HEIGHT: u32 = 533;
 
-        let map_surface = cairo::ImageSurface::create_from_png(&mut BufReader::new(File::open("map.png").unwrap()))
-        .expect("Failed to load map image");
-
-        let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width.try_into().unwrap(), height.try_into().unwrap())
+        let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, WIDTH.try_into().unwrap(), HEIGHT.try_into().unwrap())
             .expect("Can't create surface");
         {
             let cr = cairo::Context::new(&surface).unwrap();
 
-            cr.set_source_surface(&map_surface, 0.0, 0.0)?;
+            static MAP_IMAGE_SURFACE_DATA: Lazy<Vec<u8>> = Lazy::new(|| {
+                cairo::ImageSurface::create_from_png(&mut BufReader::new(File::open("map.png").unwrap())).expect("Failed to load map image").take_data().unwrap().to_vec()
+            });
+
+            let map_image_surface = cairo::ImageSurface::create_for_data(MAP_IMAGE_SURFACE_DATA.clone(), cairo::Format::Rgb24, WIDTH as i32, HEIGHT as i32, 3200).expect("Can't create map image surface");
+
+            cr.set_source_surface(&map_image_surface, 0.0, 0.0)?;
             cr.paint()?;
             cr.select_font_face("Purisa", cairo::FontSlant::Normal, cairo::FontWeight::Normal);
             cr.set_font_size(20.0);
@@ -92,16 +124,16 @@ impl GameState {
 
         let data = surface.take_data().expect("Can't get surface data");
 
-        let mut rgb_data = Vec::with_capacity(width as usize * height as usize * 3);
+        let mut rgb_data = Vec::with_capacity(WIDTH as usize * HEIGHT as usize * 3);
         for chunk in data.chunks(4) {
             rgb_data.extend_from_slice(&[chunk[2], chunk[1], chunk[0]]);
         }
 
-        let img = DynamicImage::ImageRgb8(ImageBuffer::from_vec(width, height, rgb_data).unwrap());
+        let img = DynamicImage::ImageRgb8(ImageBuffer::from_vec(WIDTH, HEIGHT, rgb_data).unwrap());
 
-        img.save(filename).unwrap();
+        img.save(options.filename).unwrap();
 
-        if should_print {
+        if options.should_print {
             print(&img, &Config {
                 width: Some(80),
                 ..Default::default()
@@ -109,13 +141,5 @@ impl GameState {
         }
 
         Ok(())
-    }
-
-    pub fn draw_map(&self) -> Result<(), cairo::Error> {
-        self.draw_map_with_filename("output-map.png", true)
-    }
-
-    pub fn save_map(&self) -> Result<(), cairo::Error> {
-        self.draw_map_with_filename("output-map.png", false)
     }
 }
