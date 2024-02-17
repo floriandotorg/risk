@@ -125,6 +125,9 @@ impl GameState {
                 if self.phase != GamePhase::Attack {
                     return Err(MoveApplyErr::MoveNotInPhase(*move_to_play, self.phase))
                 }
+                if *attacking == 0 {
+                    return Err(MoveApplyErr::ZeroUnitsInAttack);
+                }
 
                 let attacking_territory = self.territory(*from);
                 let defending_territory = self.territory(*to);

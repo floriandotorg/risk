@@ -76,6 +76,7 @@ pub enum MoveApplyErr {
     FromTerritoryNotOwned,
     ToTerritoryNotOwned,
     ToTerritoryOwned,
+    ZeroUnitsInAttack,
     GameFinished
 }
 
