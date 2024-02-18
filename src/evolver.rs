@@ -128,21 +128,23 @@ where E: Evaluator<LENGTH>, M: Mutator {
         self.population.sort_by(|a, b| a.fitness.cmp(&b.fitness).reverse());
         let best_genome = self.population[0].genome;
 
-        let threshold = POPULATION * 10 / 2;
-        let mut rng = rand::thread_rng();
-        for idx in threshold..POPULATION {
-            // Select two "winners" and apply some transformation
-            let winner_a = rng.gen_range(0..threshold);
-            let winner_b = winner_a + rng.gen_range(0..(threshold - 1));
-            let winner_b = winner_b % threshold;
-            let new_genome = self.transformation.as_ref()(&self.population[winner_a].genome, &self.population[winner_b].genome);
-            self.population[idx].genome = new_genome;
-        }
 
         // Mutate everyone randomly
         if let Some(mutator) = &self.mutator {
-            for genome in &mut self.population {
-                mutator.mutate(&mut genome.genome);
+            let threshold = POPULATION * 10 / 2;
+            let mut rng = rand::thread_rng();
+            for idx in 0..threshold {
+                self.population[threshold + idx] = self.population[threshold];
+                mutator.mutate(&mut self.population[threshold + idx].genome);
+            }
+            for idx in (threshold + threshold)..POPULATION {
+                // Select two "winners" and apply some transformation
+                let winner_a = rng.gen_range(0..threshold);
+                let winner_b = winner_a + rng.gen_range(0..(threshold - 1));
+                let winner_b = winner_b % threshold;
+                let mut new_genome = self.transformation.as_ref()(&self.population[winner_a].genome, &self.population[winner_b].genome);
+                mutator.mutate(&mut new_genome);
+                self.population[idx].genome = new_genome;
             }
         }
 
