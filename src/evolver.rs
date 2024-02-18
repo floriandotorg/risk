@@ -10,7 +10,7 @@ pub enum EvaluationResult {
 }
 
 pub trait Evaluator<const LENGTH: usize> {
-    fn initialize(&self) -> [Float; LENGTH];
+    fn initialize(&mut self) -> [Float; LENGTH];
     fn evaluate(&self, a: &[Float], b: &[Float]) -> EvaluationResult;
 }
 
@@ -49,6 +49,7 @@ where T: Evaluator<LENGTH> {
 impl<T, const LENGTH: usize, const POPULATION: usize> Evolver<T, LENGTH, POPULATION>
 where T: Evaluator<LENGTH> {
     pub fn new(evaluator: T) -> Self {
+        let mut evaluator = evaluator;
         let mut population = Vec::with_capacity(POPULATION);
         for _ in 0..POPULATION {
             population.push(GenomeStats { genome: evaluator.initialize(), fitness: 0 });
@@ -114,7 +115,7 @@ mod tests {
     }
 
     impl<const LENGTH: usize> Evaluator<LENGTH> for MaxEvaluator<LENGTH> {
-        fn initialize(&self) -> [Float; LENGTH] {
+        fn initialize(&mut self) -> [Float; LENGTH] {
             let mut rng = rand::thread_rng();
             let mut result = [0.0; LENGTH];
             for value in &mut result {
@@ -152,9 +153,35 @@ mod tests {
         assert_eq!(evaluator.evaluate(&a, &b), EvaluationResult::B);
     }
 
+
+
+    struct OnceEvaluator<const LENGTH: usize> {
+        generated: bool
+    }
+
+    impl<const LENGTH: usize> Evaluator<LENGTH> for OnceEvaluator<LENGTH> {
+        fn initialize(&mut self) -> [Float; LENGTH] {
+            let genome_value = match self.generated {
+                true => 0.0,
+                false => {
+                    self.generated = true;
+                    1.0
+                }
+            };
+            [genome_value; LENGTH]
+        }
+
+        fn evaluate(&self, a: &[Float], b: &[Float]) -> EvaluationResult {
+            let eval = MaxEvaluator::<LENGTH> {};
+            eval.evaluate(a, b)
+        }
+    }
+
     #[test]
     fn test_evolver() {
-        let evaluator = MaxEvaluator::<2> {};
-        let evolver: Evolver<_, 2, 10> = Evolver::new(evaluator);
+        let evaluator = OnceEvaluator::<2> { generated: false };
+        let mut evolver: Evolver<_, 2, 10> = Evolver::new(evaluator);
+        let fittest = evolver.evolve_step();
+        assert_eq!(fittest, [1.0, 1.0]);
     }
 }
