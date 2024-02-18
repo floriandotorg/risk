@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use rand::Rng;
 
 use crate::bots::neural_bot::Float;
@@ -55,40 +57,63 @@ pub mod transformations {
     }
 }
 
+pub trait Mutator {
+    fn mutate(&self, genome: &mut [Float]);
+}
 
-pub struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
-where T: Evaluator<LENGTH> {
+pub struct ProbabilityMutator {
+    pub range: Range<Float>,
+    pub probability: f64,
+}
+
+impl Mutator for ProbabilityMutator {
+    fn mutate(&self, genome: &mut [Float]) {
+        let mut rng = rand::thread_rng();
+        for value in genome {
+            if rng.gen_bool(self.probability) {
+                *value = rng.gen_range(self.range.clone());
+            }
+        }
+    }
+}
+
+pub struct Evolver<E, M, const LENGTH: usize, const POPULATION: usize>
+where E: Evaluator<LENGTH>, M: Mutator {
     population: [GenomeStats<LENGTH>; POPULATION],
-    evaluator: T,
-    mutation_chance: f64,
+    evaluator: E,
+    mutator: Option<M>,
     transformation: Box<dyn Fn(&[Float; LENGTH], &[Float; LENGTH]) -> [Float; LENGTH]>
 }
 
-impl<T, const LENGTH: usize, const POPULATION: usize> Evolver<T, LENGTH, POPULATION>
-where T: Evaluator<LENGTH> {
-    pub fn new(evaluator: T) -> Self {
+impl<E, M, const LENGTH: usize, const POPULATION: usize> Evolver<E, M, LENGTH, POPULATION>
+where E: Evaluator<LENGTH>, M: Mutator {
+    pub fn new(evaluator: E) -> Self {
         Evolver::with_transformation(evaluator, Box::new(transformations::average))
     }
 
-    pub fn with_transformation(evaluator: T, transformation: Box<dyn Fn(&[Float; LENGTH], &[Float; LENGTH]) -> [Float; LENGTH]>) -> Self {
+    pub fn with_transformation(evaluator: E, transformation: Box<dyn Fn(&[Float; LENGTH], &[Float; LENGTH]) -> [Float; LENGTH]>) -> Self {
         let mut evaluator = evaluator;
         let mut population = Vec::with_capacity(POPULATION);
         for _ in 0..POPULATION {
             population.push(GenomeStats { genome: evaluator.initialize(), fitness: 0 });
         }
         let population: [GenomeStats<LENGTH>; POPULATION] = population.try_into().unwrap();
-        Evolver { population, evaluator, mutation_chance: 1.0/10000.0, transformation }
+        Evolver { population, evaluator, mutator: None, transformation }
     }
 
-    pub fn mutation_chance(&self) -> f64 {
-        self.mutation_chance
+    pub fn mutator(&self) -> &Option<M> {
+        &self.mutator
     }
 
-    pub fn set_mutation_chance(&mut self, mutation_chance: f64) {
-        self.mutation_chance = mutation_chance;
+    pub fn set_mutator(&mut self, mutator: Option<M>) {
+        self.mutator = mutator;
     }
 
     pub fn evolve_step(&mut self) -> [Float; LENGTH] {
+        for state in &mut self.population {
+            state.fitness = 0;
+        }
+
         for idx_a in 0..(POPULATION - 1) {
             for idx_b in (idx_a + 1)..POPULATION {
                 let idx_winner = match self.evaluator.evaluate(&self.population[idx_a].genome, &self.population[idx_b].genome) {
@@ -115,11 +140,9 @@ where T: Evaluator<LENGTH> {
         }
 
         // Mutate everyone randomly
-        for genome in &mut self.population {
-            for value in &mut genome.genome {
-                if rng.gen_bool(self.mutation_chance) {
-                    *value = rng.gen_range(0.0..1.0);
-                }
+        if let Some(mutator) = &self.mutator {
+            for genome in &mut self.population {
+                mutator.mutate(&mut genome.genome);
             }
         }
 
@@ -132,7 +155,7 @@ where T: Evaluator<LENGTH> {
 mod tests {
     use rand::Rng;
 
-    use crate::bots::neural_bot::Float;
+    use crate::{bots::neural_bot::Float, evolver::ProbabilityMutator};
 
     use super::{EvaluationResult, Evaluator, Evolver};
 
@@ -210,7 +233,7 @@ mod tests {
     #[test]
     fn test_evolver() {
         let evaluator = OnceEvaluator::<2> { generated: false };
-        let mut evolver: Evolver<_, 2, 10> = Evolver::new(evaluator);
+        let mut evolver: Evolver<_, ProbabilityMutator, 2, 10> = Evolver::new(evaluator);
         let fittest = evolver.evolve_step();
         assert_eq!(fittest, [1.0, 1.0]);
     }
