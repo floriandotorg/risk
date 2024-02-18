@@ -20,25 +20,33 @@ struct GenomeStats<const LENGTH: usize> {
     fitness: usize,
 }
 
-fn average<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
-    let mut result = [0.0; LENGTH];
-    for idx in 0..LENGTH {
-        result[idx] = (a[idx] + b[idx]) / 2.0;
+pub mod transformations {
+    use rand::Rng;
+
+    use crate::bots::neural_bot::Float;
+
+    pub fn average<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
+        let mut result = [0.0; LENGTH];
+        for idx in 0..LENGTH {
+            result[idx] = (a[idx] + b[idx]) / 2.0;
+        }
+        result
     }
-    result
+
+    pub fn select<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
+        let mut rng = rand::thread_rng();
+        let mut result = [0.0; LENGTH];
+        for idx in 0..LENGTH {
+            result[idx] = match rng.gen_bool(0.5) {
+                true => a[idx],
+                false => b[idx],
+            };
+        }
+        result
+
+    }
 }
 
-fn select<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
-    let mut rng = rand::thread_rng();
-    let mut result = [0.0; LENGTH];
-    for idx in 0..LENGTH {
-        result[idx] = match rng.gen_bool(0.5) {
-            true => a[idx],
-            false => b[idx],
-        };
-    }
-    result
-}
 
 pub struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
 where T: Evaluator<LENGTH> {
