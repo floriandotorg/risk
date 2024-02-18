@@ -25,8 +25,9 @@ impl GameState {
     }
 
     pub fn number_of_reinforcements(&self, player: Player) -> u8 {
-        let territories_of_player = self.territories.iter().filter(|territory| territory.player == player).count();
-        let mut from_territories = match territories_of_player {
+        let territories_of_player = self.territories_states_of_player(player);
+        let remaining_reinforcements: u8 = territories_of_player.iter().map(|t| u8::MAX - t.state.armies).sum();
+        let mut from_territories = match territories_of_player.len() {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
             0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
             14 | 15 | 16 => 4,
@@ -35,7 +36,7 @@ impl GameState {
         for continent in self.continents_for_player(player) {
             from_territories += GameState::continent_bonus(continent);
         }
-        from_territories
+        std::cmp::min(from_territories, remaining_reinforcements)
     }
 
     pub fn legal_moves(&self) -> Vec<Move> {
@@ -245,7 +246,10 @@ impl GameState {
     fn set_reinforce(&mut self) {
         self.current_player = self.current_player.next();
         let number_of_reinforcements = self.number_of_reinforcements(self.current_player);
-        self.phase = GamePhase::Reinforce(number_of_reinforcements);
+        self.phase = match number_of_reinforcements {
+            0 => GamePhase::Attack,
+            _ => GamePhase::Reinforce(number_of_reinforcements),
+        };
     }
 
     pub fn named_territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {

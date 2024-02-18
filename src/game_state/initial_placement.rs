@@ -23,7 +23,9 @@ impl GameStateDuringInitialPlacement {
             territories: territories.try_into().unwrap(),
             phase: GamePhase::Reinforce(0),
         };
-        state.phase = GamePhase::Reinforce(state.number_of_reinforcements(state.current_player()));
+        let number_of_reinforcements = state.number_of_reinforcements(state.current_player());
+        assert_ne!(number_of_reinforcements, 0);
+        state.phase = GamePhase::Reinforce(number_of_reinforcements);
         state
     }
 
