@@ -297,7 +297,7 @@ mod tests {
     use crate::{game_state::{GamePhase, GameState, Move, TerritoryState}, player::Player, territories::Territory};
 
     impl GameState {
-        fn territory_mut(&mut self, territory: Territory) -> &mut TerritoryState {
+        fn territory_state_mut(&mut self, territory: Territory) -> &mut TerritoryState {
             &mut self.territories[territory as usize]
         }
     }
@@ -314,14 +314,14 @@ mod tests {
             territories: [TerritoryState {player: DEFAULT_PLAYER, armies: DEFAULT_ARMIES}; Territory::COUNT],
             phase,
         };
-        state.territory_mut(TARGET_TERRITORY).player = Player::B;
-        state.territory_mut(SOURCE_TERRITORY).armies = SOURCE_TERRITORY_ARMIES;
+        state.territory_state_mut(TARGET_TERRITORY).player = Player::B;
+        state.territory_state_mut(SOURCE_TERRITORY).armies = SOURCE_TERRITORY_ARMIES;
         state
     }
 
     fn dummy_state_with_armies(phase: GamePhase, target_armies: u8) -> GameState {
         let mut state = dummy_state(phase);
-        state.territory_mut(TARGET_TERRITORY).armies = target_armies;
+        state.territory_state_mut(TARGET_TERRITORY).armies = target_armies;
         state
     }
 
@@ -333,8 +333,9 @@ mod tests {
         assert_eq!(result.states_with_count().len(), 1);
         let result = &result.states_with_count()[0];
         assert_eq!(result.count(), 1);
-        assert_eq!(result.state().current_player, Player::B);
-        assert_eq!(result.state().phase, GamePhase::Reinforce(3));
+        let state = result.state();
+        assert_eq!(state.current_player, Player::B);
+        assert_eq!(state.phase, GamePhase::Reinforce(3));
     }
 
     #[test]
