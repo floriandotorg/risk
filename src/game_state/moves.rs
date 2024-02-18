@@ -91,19 +91,14 @@ impl GameState {
 
         match move_to_play {
             Move::Pass => {
-                let (next_phase, next_player) = match self.phase {
+                match self.phase {
                     GamePhase::Reinforce(armies) => return Err(MoveApplyErr::MoveNotInPhase(Move::Pass, GamePhase::Reinforce(armies))),
                     GamePhase::Attack | GamePhase::Fortify => {
-                        let next_player = self.current_player.next();
-                        let number_of_reinforcements = self.number_of_reinforcements(next_player);
-                        (GamePhase::Reinforce(number_of_reinforcements), next_player)
+                        let mut new_state = self.clone();
+                        new_state.set_reinforce();
+                        Ok(ApplyMoveResult::single(new_state))
                     },
-                };
-                Ok(ApplyMoveResult::single(GameState {
-                    current_player: next_player,
-                    territories: self.territories,
-                    phase: next_phase
-                }))
+                }
             },
             Move::Reinforce { territory, armies } => {
                 let number_of_reinforcements = match self.phase {
@@ -139,14 +134,8 @@ impl GameState {
                 let mut new_state = self.clone();
                 new_state.add_armies(*from, -(*armies as i16))?;
                 new_state.add_armies(*to, *armies as i16)?;
-
-                let next_player = self.current_player.next();
-                let number_of_reinforcements = self.number_of_reinforcements(next_player);
-                Ok(ApplyMoveResult::single(GameState {
-                    current_player: next_player,
-                    territories: new_state.territories,
-                    phase: GamePhase::Reinforce(number_of_reinforcements)
-                }))
+                new_state.set_reinforce();
+                Ok(ApplyMoveResult::single(new_state))
             },
             Move::Attack { from, to, attacking } => {
                 if self.phase != GamePhase::Attack {
@@ -251,6 +240,12 @@ impl GameState {
             self.territories[index].armies = attacking;
             Ok(true)
         }
+    }
+
+    fn set_reinforce(&mut self) {
+        self.current_player = self.current_player.next();
+        let number_of_reinforcements = self.number_of_reinforcements(self.current_player);
+        self.phase = GamePhase::Reinforce(number_of_reinforcements);
     }
 
     pub fn named_territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
