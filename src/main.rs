@@ -23,7 +23,7 @@ use bots::rule_based_bot::RuleBasedBot;
 struct Eval<const LENGTH: usize>;
 
 impl<const LENGTH: usize> Evaluator<LENGTH> for Eval<LENGTH> {
-    fn initialize(&self) -> [Float; LENGTH] {
+    fn initialize(&mut self) -> [Float; LENGTH] {
         NeuralBot::get_random_weights_and_biases().try_into().unwrap()
     }
 
