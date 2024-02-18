@@ -294,7 +294,7 @@ impl GameState {
 mod tests {
     use strum::EnumCount;
 
-    use crate::{game_state::{GamePhase, GameState, Move, TerritoryState}, player::Player, territories::Territory};
+    use crate::{game_state::{apply_move_result::ApplyMoveResult, GamePhase, GameState, Move, TerritoryState}, player::Player, territories::Territory};
 
     impl GameState {
         fn territory_state_mut(&mut self, territory: Territory) -> &mut TerritoryState {
@@ -307,6 +307,7 @@ mod tests {
     const TARGET_TERRITORY: Territory = Territory::Alaska;
     const SOURCE_TERRITORY: Territory = Territory::NorthwestTerritory;
     const SOURCE_TERRITORY_ARMIES: u8 = 10;
+    const ADJACENT_TERRITORY: Territory = Territory::Alberta;
 
     fn dummy_state(phase: GamePhase) -> GameState {
         let mut state = GameState {
@@ -325,17 +326,32 @@ mod tests {
         state
     }
 
+    fn check_single_state(move_result: ApplyMoveResult) -> GameState {
+        assert_eq!(move_result.states_with_count().len(), 1);
+        let result = &move_result.states_with_count()[0];
+        assert_eq!(result.count(), 1);
+        *result.state()
+    }
+
     #[test]
     fn attack_pass_skips() {
         let start = dummy_state(GamePhase::Attack);
-        let result = start.apply_move(&Move::Pass);
-        let result = result.unwrap();
-        assert_eq!(result.states_with_count().len(), 1);
-        let result = &result.states_with_count()[0];
-        assert_eq!(result.count(), 1);
-        let state = result.state();
+        let result = start.apply_move(&Move::Pass).unwrap();
+        let state = check_single_state(result);
         assert_eq!(state.current_player, Player::B);
         assert_eq!(state.phase, GamePhase::Reinforce(3));
+    }
+
+    #[test]
+    fn fortify() {
+        let start = dummy_state(GamePhase::Fortify);
+        let result = start.apply_move(&Move::Fortify { from: SOURCE_TERRITORY, to: ADJACENT_TERRITORY, armies: 1 }).unwrap();
+        let state = check_single_state(result);
+        assert_eq!(state.current_player, Player::B);
+        assert_eq!(state.phase, GamePhase::Reinforce(3));
+
+        assert_eq!(state.territory_state(SOURCE_TERRITORY).armies, SOURCE_TERRITORY_ARMIES - 1);
+        assert_eq!(state.territory_state(ADJACENT_TERRITORY).armies, DEFAULT_ARMIES + 1);
     }
 
     #[test]
