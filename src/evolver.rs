@@ -43,7 +43,15 @@ pub mod transformations {
             };
         }
         result
+    }
 
+    pub fn select_half<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
+        let mut result = [0.0; LENGTH];
+        let mid = LENGTH / 2;
+        let (left, right) = result.split_at_mut(mid);
+        left.copy_from_slice(&a[0..mid]);
+        right.copy_from_slice(&b[mid..]);
+        result
     }
 }
 
@@ -53,18 +61,23 @@ where T: Evaluator<LENGTH> {
     population: [GenomeStats<LENGTH>; POPULATION],
     evaluator: T,
     mutation_chance: f64,
+    transformation: Box<dyn Fn(&[Float; LENGTH], &[Float; LENGTH]) -> [Float; LENGTH]>
 }
 
 impl<T, const LENGTH: usize, const POPULATION: usize> Evolver<T, LENGTH, POPULATION>
 where T: Evaluator<LENGTH> {
     pub fn new(evaluator: T) -> Self {
+        Evolver::with_transformation(evaluator, Box::new(transformations::average))
+    }
+
+    pub fn with_transformation(evaluator: T, transformation: Box<dyn Fn(&[Float; LENGTH], &[Float; LENGTH]) -> [Float; LENGTH]>) -> Self {
         let mut evaluator = evaluator;
         let mut population = Vec::with_capacity(POPULATION);
         for _ in 0..POPULATION {
             population.push(GenomeStats { genome: evaluator.initialize(), fitness: 0 });
         }
         let population: [GenomeStats<LENGTH>; POPULATION] = population.try_into().unwrap();
-        Evolver { population, evaluator, mutation_chance: 1.0/10000.0 }
+        Evolver { population, evaluator, mutation_chance: 1.0/10000.0, transformation }
     }
 
     pub fn mutation_chance(&self) -> f64 {
@@ -97,7 +110,7 @@ where T: Evaluator<LENGTH> {
             let winner_a = rng.gen_range(0..threshold);
             let winner_b = winner_a + rng.gen_range(0..(threshold - 1));
             let winner_b = winner_b % threshold;
-            let new_genome = average(&self.population[winner_a].genome, &self.population[winner_b].genome);
+            let new_genome = self.transformation.as_ref()(&self.population[winner_a].genome, &self.population[winner_b].genome);
             self.population[idx].genome = new_genome;
         }
 
