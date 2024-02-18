@@ -117,6 +117,19 @@ pub struct NeuralBot {
 }
 
 impl NeuralBot {
+    const ARCHITECTURE: [usize; 4] = [Territory::COUNT, 20, 20, NEIGHBORS.len()];
+    pub const LENGTH: usize = Territory::COUNT * 20 + 20 * 20 + 20 * NEIGHBORS.len() + 20 + 20 + NEIGHBORS.len();
+
+    pub fn from_weights_and_biases(data: &[Float]) -> Self {
+        let mut nn = NeuralNetwork::new(&Self::ARCHITECTURE);
+        nn.load(data);
+        Self { nn }
+    }
+
+    pub fn get_random_weights_and_biases() -> Vec<Float> {
+        NeuralNetwork::generate_initialization_vector(&Self::ARCHITECTURE)
+    }
+
     fn random_move(&self, game_state: GameState) -> Move {
         let moves = game_state.legal_moves();
         moves[rand::thread_rng().gen_range(0..moves.len())]
@@ -164,9 +177,8 @@ impl Bot for NeuralBot {
 
 impl Default for NeuralBot {
     fn default() -> Self {
-        let architecture = vec![Territory::COUNT, 20, 20, NEIGHBORS.len()];
-        let mut nn = NeuralNetwork::new(&architecture);
-        nn.load(&NeuralNetwork::generate_initialization_vector(&architecture));
+        let mut nn = NeuralNetwork::new(&Self::ARCHITECTURE);
+        nn.load(&Self::get_random_weights_and_biases());
         Self { nn }
     }
 }

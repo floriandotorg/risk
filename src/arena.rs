@@ -47,14 +47,28 @@ impl fmt::Debug for ArenaResult {
     }
 }
 
-pub fn play_games<BotA: Bot + Default, BotB: Bot + Default>(games: u32) -> Result<ArenaResult, &'static str> {
+pub fn play_games_with_default_bot_init<BotA: Bot + Default, BotB: Bot + Default>(games: u32) -> Result<ArenaResult, &'static str>
+where
+BotA: Bot + 'static,
+BotB: Bot + 'static {
+    play_games(games, || BotA::default(), || BotB::default())
+}
+
+pub fn play_games<BotA: Bot, BotB: Bot, F, G>(games: u32, bot_a_factory: F, bot_b_factory: G) -> Result<ArenaResult, &'static str>
+where
+BotA: Bot + 'static,
+BotB: Bot + 'static,
+F: Fn() -> BotA,
+G: Fn() -> BotB {
     let pool = ThreadPool::new(num_cpus::get());
 
     let (tx, rx) = channel();
     for _ in 0..games {
         let tx = tx.clone();
+        let bot_a = bot_a_factory();
+        let bot_b = bot_b_factory();
         pool.execute(move|| {
-            let mut game = Game::new(BotA::default(), BotB::default());
+            let mut game = Game::new(bot_a, bot_b);
             tx.send(game.play_until_end(&PlayOptions::default()).unwrap()).expect("channel will be there waiting for the pool");
         });
     }

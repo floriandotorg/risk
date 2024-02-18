@@ -1,6 +1,6 @@
 use crate::game_state::{GameState, Move};
 
-pub trait Bot {
+pub trait Bot: Send {
     fn make_move(&self, game_state: GameState) -> Move;
 }
 

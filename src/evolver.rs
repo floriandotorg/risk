@@ -40,7 +40,7 @@ fn select<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Flo
     result
 }
 
-struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
+pub struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
 where T: Evaluator<LENGTH> {
     population: [GenomeStats<LENGTH>; POPULATION],
     evaluator: T,
