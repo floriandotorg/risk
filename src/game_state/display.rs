@@ -4,7 +4,7 @@ use super::{NamedTerritoryState, GameState, Move};
 
 impl Display for GameState {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        for NamedTerritoryState { territory, state } in self.territories_iter() {
+        for NamedTerritoryState { territory, state } in self.named_territories_iter() {
             writeln!(f, "{:24} - {:?} {}", territory, state.player, state.armies)?;
         }
         Ok(())

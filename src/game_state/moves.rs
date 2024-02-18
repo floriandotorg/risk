@@ -253,17 +253,17 @@ impl GameState {
         }
     }
 
-    pub fn territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
+    pub fn named_territories_iter<'a>(&'a self) -> impl Iterator<Item = NamedTerritoryState> {
         self.territories.iter().enumerate().map(|(i, t)| NamedTerritoryState { territory: Territory::try_from(i as u8).unwrap(), state: t })
     }
 
     pub fn territories_states_of_player(&self, player: Player) -> Vec<NamedTerritoryState> {
-        self.territories_iter().filter_map(|territory| if territory.state.player == player { Some(territory) } else { None }).collect()
+        self.named_territories_iter().filter_map(|territory| if territory.state.player == player { Some(territory) } else { None }).collect()
     }
 
     pub fn continents_for_player(&self, player: Player) -> Vec<Continent> {
         let mut result = Continent::iter().collect::<Vec<_>>();
-        for NamedTerritoryState { territory, state } in self.territories_iter() {
+        for NamedTerritoryState { territory, state } in self.named_territories_iter() {
             if state.player != player {
                 let continent = territory.continent();
                 result.retain(|&c| c != continent);
@@ -283,6 +283,10 @@ impl GameState {
 
     pub fn phase(&self) -> GamePhase {
         self.phase
+    }
+
+    pub fn territory_states(&self) -> &[TerritoryState] {
+        &self.territories
     }
 }
 

@@ -6,3 +6,4 @@ pub trait Bot {
 
 pub mod random_bot;
 pub mod rule_based_bot;
+pub mod neural_bot;
