@@ -44,6 +44,7 @@ struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
 where T: Evaluator<LENGTH> {
     population: [GenomeStats<LENGTH>; POPULATION],
     evaluator: T,
+    mutation_chance: f64,
 }
 
 impl<T, const LENGTH: usize, const POPULATION: usize> Evolver<T, LENGTH, POPULATION>
@@ -55,7 +56,15 @@ where T: Evaluator<LENGTH> {
             population.push(GenomeStats { genome: evaluator.initialize(), fitness: 0 });
         }
         let population: [GenomeStats<LENGTH>; POPULATION] = population.try_into().unwrap();
-        Evolver { population, evaluator }
+        Evolver { population, evaluator, mutation_chance: 1.0/10000.0 }
+    }
+
+    pub fn mutation_chance(&self) -> f64 {
+        self.mutation_chance
+    }
+
+    pub fn set_mutation_chance(&mut self, mutation_chance: f64) {
+        self.mutation_chance = mutation_chance;
     }
 
     pub fn evolve_step(&mut self) -> [Float; LENGTH] {
@@ -87,7 +96,7 @@ where T: Evaluator<LENGTH> {
         // Mutate everyone randomly
         for genome in &mut self.population {
             for value in &mut genome.genome {
-                if rng.gen_range(0..10000) == 0 {
+                if rng.gen_bool(self.mutation_chance) {
                     *value = rng.gen_range(0.0..1.0);
                 }
             }
