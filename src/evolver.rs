@@ -27,6 +27,18 @@ fn average<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Fl
     result
 }
 
+fn select<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
+    let mut rng = rand::thread_rng();
+    let mut result = [0.0; LENGTH];
+    for idx in 0..LENGTH {
+        result[idx] = match rng.gen_bool(0.5) {
+            true => a[idx],
+            false => b[idx],
+        };
+    }
+    result
+}
+
 struct Evolver<T, const LENGTH: usize, const POPULATION: usize>
 where T: Evaluator<LENGTH> {
     population: [GenomeStats<LENGTH>; POPULATION],
