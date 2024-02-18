@@ -8,7 +8,7 @@ use crate::bots::Bot;
 use crate::game_state::{GamePhase, GameState, Move, NamedTerritoryState};
 use crate::territories::{Territory, NEIGHBORS};
 
-type Float = f32;
+pub type Float = f32;
 
 struct Layer {
     biases: Vec<Float>,

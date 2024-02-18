@@ -1,5 +1,7 @@
 use rand::Rng;
 
+use crate::bots::neural_bot::Float;
+
 #[derive(PartialEq, Eq, Debug)]
 pub enum EvaluationResult {
     A,
@@ -7,20 +9,20 @@ pub enum EvaluationResult {
 }
 
 pub trait Evaluator<const LENGTH: usize> {
-    fn initialize(&self) -> [f64; LENGTH];
-    fn evaluate(&self, a: &[f64], b: &[f64]) -> EvaluationResult;
+    fn initialize(&self) -> [Float; LENGTH];
+    fn evaluate(&self, a: &[Float], b: &[Float]) -> EvaluationResult;
 }
 
 #[derive(Clone, Copy, Debug)]
 struct GenomeStats<const LENGTH: usize> {
-    genome: [f64; LENGTH],
+    genome: [Float; LENGTH],
     fitness: usize,
 }
 
-fn average<const LENGTH: usize>(a: &[f64; LENGTH], b: &[f64; LENGTH]) -> [f64; LENGTH] {
-    let mut result = [0f64; LENGTH];
+fn average<const LENGTH: usize>(a: &[Float; LENGTH], b: &[Float; LENGTH]) -> [Float; LENGTH] {
+    let mut result = [0.0; LENGTH];
     for idx in 0..LENGTH {
-        result[idx] = (a[idx] + b[idx]) / 2f64;
+        result[idx] = (a[idx] + b[idx]) / 2.0;
     }
     result
 }
@@ -35,14 +37,14 @@ impl<T, const LENGTH: usize, const POPULATION: usize> Evolver<T, LENGTH, POPULAT
 where T: Evaluator<LENGTH> {
     pub fn new(evaluator: T) -> Self {
         let mut population = Vec::with_capacity(POPULATION);
-        for genome in &mut population {
-            *genome = GenomeStats { genome: evaluator.initialize(), fitness: 0 };
+        for _ in 0..POPULATION {
+            population.push(GenomeStats { genome: evaluator.initialize(), fitness: 0 });
         }
         let population: [GenomeStats<LENGTH>; POPULATION] = population.try_into().unwrap();
         Evolver { population, evaluator }
     }
 
-    pub fn evolve_step(&mut self) -> [f64; LENGTH] {
+    pub fn evolve_step(&mut self) -> [Float; LENGTH] {
         for idx_a in 0..(POPULATION - 1) {
             for idx_b in (idx_a + 1)..POPULATION {
                 let idx_winner = match self.evaluator.evaluate(&self.population[idx_a].genome, &self.population[idx_b].genome) {
@@ -71,7 +73,7 @@ where T: Evaluator<LENGTH> {
         for genome in &mut self.population {
             for value in &mut genome.genome {
                 if rng.gen_range(0..10000) == 0 {
-                    *value = rng.gen_range(0f64..1f64);
+                    *value = rng.gen_range(0.0..1.0);
                 }
             }
         }
@@ -85,27 +87,29 @@ where T: Evaluator<LENGTH> {
 mod tests {
     use rand::Rng;
 
-    use super::{Evaluator, EvaluationResult};
+    use crate::bots::neural_bot::Float;
+
+    use super::{EvaluationResult, Evaluator, Evolver};
 
     struct MaxEvaluator<const LENGTH: usize>;
 
     impl<const LENGTH: usize> MaxEvaluator<LENGTH> {
-        fn evaluate_single(values: &[f64]) -> f64 {
-            values.iter().filter(|&v| *v >= 0f64 && *v <= 1f64).sum()
+        fn evaluate_single(values: &[Float]) -> Float {
+            values.iter().filter(|&v| *v >= 0.0 && *v <= 1.0).sum()
         }
     }
 
     impl<const LENGTH: usize> Evaluator<LENGTH> for MaxEvaluator<LENGTH> {
-        fn initialize(&self) -> [f64; LENGTH] {
+        fn initialize(&self) -> [Float; LENGTH] {
             let mut rng = rand::thread_rng();
-            let mut result = [0f64; LENGTH];
+            let mut result = [0.0; LENGTH];
             for value in &mut result {
-                *value = rng.gen_range(0f64..=1f64);
+                *value = rng.gen_range(0.0..=1.0);
             }
             result
         }
 
-        fn evaluate(&self, a: &[f64], b: &[f64]) -> EvaluationResult {
+        fn evaluate(&self, a: &[Float], b: &[Float]) -> EvaluationResult {
             let sum_a = Self::evaluate_single(a);
             let sum_b = Self::evaluate_single(b);
             let a_is_bigger = if sum_a == sum_b {
@@ -125,12 +129,18 @@ mod tests {
     fn test_evaluator() {
         let evaluator = MaxEvaluator::<2> {};
 
-        let a = [0f64, 0f64];
-        let b = [0f64, 1f64];
+        let a = [0.0, 0.0];
+        let b = [0.0, 1.0];
         assert_eq!(evaluator.evaluate(&a, &b), EvaluationResult::B);
 
-        let a = [10f64, 0.2f64];
-        let b = [0.5f64, 0.5f64];
+        let a = [10.0, 0.2];
+        let b = [0.5, 0.5];
         assert_eq!(evaluator.evaluate(&a, &b), EvaluationResult::B);
+    }
+
+    #[test]
+    fn test_evolver() {
+        let evaluator = MaxEvaluator::<2> {};
+        let evolver: Evolver<_, 2, 10> = Evolver::new(evaluator);
     }
 }
