@@ -6,6 +6,7 @@ use crate::bots::neural_bot::Float;
 pub enum EvaluationResult {
     A,
     B,
+    Draw,
 }
 
 pub trait Evaluator<const LENGTH: usize> {
@@ -62,6 +63,7 @@ where T: Evaluator<LENGTH> {
                 let idx_winner = match self.evaluator.evaluate(&self.population[idx_a].genome, &self.population[idx_b].genome) {
                     EvaluationResult::A => idx_a,
                     EvaluationResult::B => idx_b,
+                    EvaluationResult::Draw => continue,
                 };
                 self.population[idx_winner].fitness += 1
             }
