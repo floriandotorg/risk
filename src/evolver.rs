@@ -131,7 +131,7 @@ where E: Evaluator<LENGTH>, M: Mutator {
 
         // Mutate everyone randomly
         if let Some(mutator) = &self.mutator {
-            let threshold = POPULATION * 10 / 2;
+            let threshold = POPULATION * 2 / 10;
             let mut rng = rand::thread_rng();
             for idx in 0..threshold {
                 self.population[threshold + idx] = self.population[threshold];
