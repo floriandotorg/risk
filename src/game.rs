@@ -9,7 +9,7 @@ fn recreate_folder<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
 }
 
 use crate::game_state::draw_map::DrawMapOptions;
-use crate::game_state::{GameState, GameStateDuringInitialPlacement, Move, MoveApplyErr};
+use crate::game_state::{self, GameState, GameStateDuringInitialPlacement, Move, MoveApplyErr};
 use crate::player::Player;
 use crate::bots::Bot;
 
@@ -48,7 +48,14 @@ impl PlayOptions {
         self.debug_output = true;
         self
     }
+}
 
+pub fn evaluate_win(game_state: GameState) -> GameResult {
+    if game_state.is_finished() {
+        GameResult::Win(game_state.current_player())
+    } else {
+        GameResult::Draw
+    }
 }
 
 impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
@@ -56,13 +63,15 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         Self { round: 0, bot_a, bot_b, game_state: GameStateDuringInitialPlacement::new().place_random().start() }
     }
 
-    pub fn play_round(&mut self, options: PlayOptions) -> Result<(Option<GameResult>, Vec<Move>), MoveApplyErr> {
+    pub fn play_round<Evaluator>(&mut self, evaluate_result: &Evaluator, options: PlayOptions) -> Result<(Option<GameResult>, Vec<Move>), MoveApplyErr>
+    where
+    Evaluator: Fn(GameState) -> GameResult {
         if self.game_state.is_finished() {
-            return Ok((Some(GameResult::Win(self.game_state.current_player())), vec![]))
+            return Ok((Some(evaluate_result(self.game_state)), vec![]))
         }
 
         if self.round >= 200 {
-            return Ok((Some(GameResult::Draw), vec![]))
+            return Ok((Some(evaluate_result(self.game_state)), vec![]))
         }
 
         if let Some(filename) = options.filename {
@@ -100,7 +109,9 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
         Ok((None, moves_played))
     }
 
-    pub fn play_until_end(&mut self, options: &PlayOptions) -> Result<(u16, GameResult), MoveApplyErr> {
+    pub fn play_until_end<Evaluator>(&mut self, evaluate_result: &Evaluator, options: &PlayOptions) -> Result<(u16, GameResult), MoveApplyErr>
+    where
+    Evaluator: Fn(GameState) -> GameResult {
         if let Some(folder) = &options.filename {
             recreate_folder(folder).expect("Could not recreate folder");
         }
@@ -111,7 +122,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
             if let Some(folder) = &options.filename {
                 round_options.filename = Some(format!("./{}/{}.png", folder, self.round + 1));
             }
-            result = self.play_round(round_options)?.0;
+            result = self.play_round(evaluate_result, round_options)?.0;
         }
         Ok((self.round, result.unwrap()))
     }

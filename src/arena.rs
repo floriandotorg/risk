@@ -5,6 +5,7 @@ use num_cpus;
 use threadpool::ThreadPool;
 
 use crate::game::{Game, GameResult, PlayOptions};
+use crate::game_state::GameState;
 use crate::player::Player;
 use crate::bots::Bot;
 
@@ -47,20 +48,22 @@ impl fmt::Debug for ArenaResult {
     }
 }
 
-pub fn play_games_with_default_bot_init<BotA: Bot + Default, BotB: Bot + Default>(games: u32) -> Result<ArenaResult, &'static str>
+pub fn play_games_with_default_bot_init<BotA: Bot + Default, BotB: Bot + Default, Evaluator>(games: u32, evaluate_result: &'static Evaluator) -> Result<ArenaResult, &'static str>
 where
 BotA: Bot + 'static,
-BotB: Bot + 'static {
-    play_games(games, || BotA::default(), || BotB::default())
+BotB: Bot + 'static,
+Evaluator: Fn(GameState) -> GameResult + Send + Sync + 'static {
+    play_games(games, evaluate_result, || BotA::default(), || BotB::default())
 }
 
-pub fn play_games<BotA: Bot, BotB: Bot, F, G>(games: u32, bot_a_factory: F, bot_b_factory: G) -> Result<ArenaResult, &'static str>
+pub fn play_games<BotA: Bot, BotB: Bot, F, G, Evaluator>(games: u32, evaluate_result: &'static Evaluator, bot_a_factory: F, bot_b_factory: G) -> Result<ArenaResult, &'static str>
 where
 BotA: Bot + 'static,
 BotB: Bot + 'static,
 F: Fn() -> BotA,
-G: Fn() -> BotB {
-    let pool = ThreadPool::new(num_cpus::get());
+G: Fn() -> BotB,
+Evaluator: Fn(GameState) -> GameResult + Send + Sync + 'static {
+    let pool = ThreadPool::new((num_cpus::get() as f64 * 1.2) as usize);
 
     let (tx, rx) = channel();
     for _ in 0..games {
@@ -69,7 +72,7 @@ G: Fn() -> BotB {
         let bot_b = bot_b_factory();
         pool.execute(move|| {
             let mut game = Game::new(bot_a, bot_b);
-            tx.send(game.play_until_end(&PlayOptions::default()).unwrap()).expect("channel will be there waiting for the pool");
+            tx.send(game.play_until_end(evaluate_result, &PlayOptions::default()).unwrap()).expect("channel will be there waiting for the pool");
         });
     }
 

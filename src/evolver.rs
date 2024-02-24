@@ -116,11 +116,13 @@ where E: Evaluator<LENGTH>, M: Mutator {
 
         for idx_a in 0..(POPULATION - 1) {
             for idx_b in (idx_a + 1)..POPULATION {
+                // println!("Evaluating {} vs {}", idx_a, idx_b);
                 let idx_winner = match self.evaluator.evaluate(&self.population[idx_a].genome, &self.population[idx_b].genome) {
                     EvaluationResult::A => idx_a,
                     EvaluationResult::B => idx_b,
                     EvaluationResult::Draw => continue,
                 };
+                // println!("Winner: {}", idx_winner);
                 self.population[idx_winner].fitness += 1
             }
         }
