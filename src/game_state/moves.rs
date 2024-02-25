@@ -26,7 +26,7 @@ impl GameState {
 
     pub fn number_of_reinforcements(&self, player: Player) -> u8 {
         let territories_of_player = self.territories_states_of_player(player);
-        let remaining_reinforcements: u8 = territories_of_player.iter().map(|t| u8::MAX - t.state.armies).sum();
+        let remaining_reinforcements: u16 = territories_of_player.iter().map(|t| u8::MAX as u16 - t.state.armies as u16).sum();
         let mut from_territories = match territories_of_player.len() {
             // switch when ready https://github.com/rust-lang/rust/issues/37854
             0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 => 3,
@@ -36,7 +36,7 @@ impl GameState {
         for continent in self.continents_for_player(player) {
             from_territories += GameState::continent_bonus(continent);
         }
-        std::cmp::min(from_territories, remaining_reinforcements)
+        std::cmp::min(from_territories as u16, remaining_reinforcements).try_into().unwrap()
     }
 
     pub fn legal_moves(&self) -> Vec<Move> {
