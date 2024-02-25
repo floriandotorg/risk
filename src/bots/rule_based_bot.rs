@@ -10,12 +10,16 @@ pub struct RuleBasedBot;
 impl RuleBasedBot {
     fn random_move(&self, game_state: GameState) -> Move {
         let moves = game_state.legal_moves();
+        if moves.is_empty() {
+            println!("{}", game_state);
+            println!("RBB: No legal moves");
+        }
         moves[rand::thread_rng().gen_range(0..moves.len())]
     }
 }
 
 impl Bot for RuleBasedBot {
-    fn make_move(&self, game_state: GameState) -> Move {
+    fn make_move(&mut self, game_state: GameState) -> Move {
         match game_state.phase() {
             GamePhase::Reinforce(_) => {
                 let my_territories = game_state.territories_states_of_player(game_state.current_player());

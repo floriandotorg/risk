@@ -1,4 +1,5 @@
-use game_state::GameStateDuringInitialPlacement;
+// #![allow(dead_code)]
+// #![allow(unused_imports)]
 
 extern crate image;
 
@@ -10,11 +11,13 @@ mod game;
 mod arena;
 mod evolver;
 
+use game_state::GameStateDuringInitialPlacement;
 use bots::Bot;
 use game::PlayOptions;
 use game_state::{draw_map::DrawMapOptions, GamePhase, GameState};
 use evolver::{EvaluationResult, Evaluator, Evolver, ProbabilityMutator};
 use player::Player;
+use ndarray::{Array1, Array, ArrayView1};
 
 use bots::neural_bot::{NeuralBot, Float};
 use bots::random_bot::RandomBot;
@@ -27,11 +30,11 @@ struct Eval<const LENGTH: usize>;
 
 impl<const LENGTH: usize> Evaluator<LENGTH> for Eval<LENGTH> {
     fn initialize(&mut self) -> [Float; LENGTH] {
-        NeuralBot::get_random_weights_and_biases().try_into().unwrap()
+        NeuralBot::get_random_weights_and_biases().to_vec().try_into().unwrap()
     }
 
     fn evaluate(&self, a: &[Float], b: &[Float]) -> EvaluationResult {
-        let result = arena::play_games::<NeuralBot, NeuralBot, _, _, _>(20, &eval_territory, || NeuralBot::from_weights_and_biases(a), || NeuralBot::from_weights_and_biases(b)).unwrap();
+        let result = arena::play_games::<NeuralBot, NeuralBot, _, _, _>(20, &eval_territory, || NeuralBot::from_weights_and_biases(&Array1::from(a.to_owned())), || NeuralBot::from_weights_and_biases(&Array1::from(b.to_owned()))).unwrap();
         match result.winner() {
             Some(winner) => {
                 if winner == Player::A { EvaluationResult::A } else { EvaluationResult::B }
@@ -67,26 +70,28 @@ fn eval_territory(game_state: GameState) -> GameResult {
 
 fn main() {
     let mut evolver: Evolver<_, ProbabilityMutator, { NeuralBot::LENGTH }, 40> = Evolver::with_transformation(Eval::<{ NeuralBot::LENGTH }> {}, Box::new(transformations::select));
-    let mut best_genome = [0.0; NeuralBot::LENGTH];
+    let mut best_genome;
 
-    for g in 1..100 {
+    for g in 1..5 {
         println!("Generation: {}", g);
 
         evolver.set_mutator(Some(ProbabilityMutator { probability: 1.0/(g as f64 * 100.0) + 0.001, range: -1.0..1.0 }));
 
         best_genome = evolver.evolve_step();
 
-        let results = arena::play_games::<RandomBot, NeuralBot, _, _, _>(100, &game::evaluate_win, || RandomBot {}, || NeuralBot::from_weights_and_biases(&best_genome));
+        let genome = ArrayView1::from(&best_genome).to_owned();
+
+        let results = arena::play_games::<RandomBot, NeuralBot, _, _, _>(100, &game::evaluate_win, || RandomBot {}, || NeuralBot::from_weights_and_biases(&genome));
         println!("Against Random Bot {:?}", results);
 
-        let results = arena::play_games::<RuleBasedBot, NeuralBot, _, _, _>(100, &game::evaluate_win, || RuleBasedBot {}, || NeuralBot::from_weights_and_biases(&best_genome));
+        let results = arena::play_games::<RuleBasedBot, NeuralBot, _, _, _>(100, &game::evaluate_win, || RuleBasedBot {}, || NeuralBot::from_weights_and_biases(&genome));
         println!("Against Rule Based Bot {:?}", results);
     }
 
-    let mut game = game::Game::new(RandomBot {}, NeuralBot::from_weights_and_biases(&best_genome));
-    println!("{:?}", game.play_until_end(&game::evaluate_win, &PlayOptions::default().save_map_images("test")).unwrap());
+    // let mut game = game::Game::new(RandomBot {}, NeuralBot::from_weights_and_biases(&best_genome));
+    // println!("{:?}", game.play_until_end(&game::evaluate_win, &PlayOptions::default().save_map_images("test")).unwrap());
 
-    println!("{:?}", best_genome);
+    // println!("{:?}", best_genome);
 
     // let mut game = game::Game::new(RuleBasedBot {}, NeuralBot::from_weights_and_biases(&best_genome));
     // println!("{:?}", game.play_until_end(&game::evaluate_win, &PlayOptions::default().save_map_images("test").verbose()).unwrap());

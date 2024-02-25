@@ -1,7 +1,7 @@
 use crate::game_state::{GameState, Move};
 
 pub trait Bot: Send {
-    fn make_move(&self, game_state: GameState) -> Move;
+    fn make_move(&mut self, game_state: GameState) -> Move;
 }
 
 pub mod random_bot;

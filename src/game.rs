@@ -9,7 +9,7 @@ fn recreate_folder<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
 }
 
 use crate::game_state::draw_map::DrawMapOptions;
-use crate::game_state::{self, GameState, GameStateDuringInitialPlacement, Move, MoveApplyErr};
+use crate::game_state::{GameState, GameStateDuringInitialPlacement, Move, MoveApplyErr};
 use crate::player::Player;
 use crate::bots::Bot;
 
@@ -88,7 +88,7 @@ impl<BotA: Bot, BotB: Bot> Game<BotA, BotB> {
 
         let mut moves_played = vec![];
         let player = self.game_state.current_player();
-        let bot: &dyn Bot = if player == Player::A { &self.bot_a } else { &self.bot_b };
+        let bot: &mut dyn Bot = if player == Player::A { &mut self.bot_a } else { &mut self.bot_b };
         while self.game_state.current_player() == player && !self.game_state.is_finished() {
             let move_to_play = bot.make_move(self.game_state.clone());
             moves_played.push(move_to_play);
